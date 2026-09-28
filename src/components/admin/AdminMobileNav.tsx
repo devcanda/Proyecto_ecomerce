@@ -21,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { Logo } from "@/components/layout/Logo"
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -44,11 +45,11 @@ export function AdminMobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <SheetHeader className="border-b px-6 py-4">
-          <SheetTitle className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">BT</span>
-            </div>
-            Admin Panel
+          <SheetTitle className="flex items-center gap-3">
+            <Logo className="h-9" />
+            <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              Admin
+            </span>
           </SheetTitle>
         </SheetHeader>
         <nav className="flex-1 space-y-1 p-4">

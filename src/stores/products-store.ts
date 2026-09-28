@@ -6,6 +6,7 @@ interface ProductsState {
   categories: Category[]
   brands: Brand[]
   featuredProducts: Product[]
+  newProducts: Product[]
   filters: FilterState
   loading: boolean
   error: string | null
@@ -13,6 +14,7 @@ interface ProductsState {
   // Actions
   fetchProducts: (filters?: Partial<FilterState>) => Promise<void>
   fetchFeaturedProducts: () => Promise<void>
+  fetchNewProducts: () => Promise<void>
   fetchCategories: () => Promise<void>
   fetchBrands: () => Promise<void>
   setFilters: (filters: Partial<FilterState>) => void
@@ -31,6 +33,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   categories: [],
   brands: [],
   featuredProducts: [],
+  newProducts: [],
   filters: defaultFilters,
   loading: false,
   error: null,
@@ -76,6 +79,18 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       set({ featuredProducts: data.products })
     } catch (error) {
       console.error("Error fetching featured products:", error)
+    }
+  },
+
+  fetchNewProducts: async () => {
+    try {
+      const response = await fetch("/api/products?sortBy=newest&limit=8")
+      if (!response.ok) throw new Error("Failed to fetch new products")
+
+      const data = await response.json()
+      set({ newProducts: data.products })
+    } catch (error) {
+      console.error("Error fetching new products:", error)
     }
   },
 

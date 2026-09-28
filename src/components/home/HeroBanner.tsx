@@ -4,136 +4,129 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import Autoplay from "embla-carousel-autoplay"
-import { Button } from "@/components/ui/button"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel"
+import { cn } from "@/lib/utils"
 
 const slides = [
   {
     id: 1,
-    badge: "Nuevo Lanzamiento",
-    title: "RTX Serie 40",
-    subtitle: "Potencia Maxima",
-    description: "Las tarjetas graficas mas potentes para gaming y creacion de contenido",
-    cta: "Ver GPUs",
-    href: "/products?category=componentes",
-    gradient: "from-violet-900 via-purple-900 to-slate-900",
-    image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800",
+    title: "Tecnología Que Eleva Tu Setup Cada Día",
+    cta: "Comprar Ahora",
+    href: "/products",
+    image: "https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d2?w=1800",
   },
   {
     id: 2,
-    badge: "Hasta 40% OFF",
-    title: "Monitores Gaming",
-    subtitle: "240Hz QHD",
-    description: "La mejor experiencia visual con monitores de alta tasa de refresco",
-    cta: "Ver Ofertas",
-    href: "/products?category=monitores",
-    gradient: "from-blue-900 via-cyan-900 to-slate-900",
-    image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800",
+    title: "Juega Sin Límites Con Lo Último En Gaming",
+    cta: "Ver Componentes",
+    href: "/products?category=componentes",
+    image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=1800",
   },
   {
     id: 3,
-    badge: "Bestseller",
-    title: "Perifericos Pro",
-    subtitle: "Precision Total",
-    description: "Teclados mecanicos y mouse gaming de las mejores marcas",
-    cta: "Explorar",
-    href: "/products?category=teclados",
-    gradient: "from-emerald-900 via-teal-900 to-slate-900",
-    image: "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=800",
+    title: "Monitores Que Transforman Tu Espacio",
+    cta: "Ver Monitores",
+    href: "/products?category=monitores",
+    image: "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=1800",
   },
 ]
 
 export function HeroBanner() {
   const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true })
+    Autoplay({ delay: 6000, stopOnInteraction: true })
   )
+  const [api, setApi] = React.useState<CarouselApi>()
+  const [current, setCurrent] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!api) return
+    const onSelect = () => setCurrent(api.selectedScrollSnap())
+    onSelect()
+    api.on("select", onSelect)
+    return () => {
+      api.off("select", onSelect)
+    }
+  }, [api])
 
   return (
-    <section className="relative">
+    <section>
       <Carousel
+        setApi={setApi}
         plugins={[plugin.current]}
-        className="w-full"
-        opts={{
-          loop: true,
-        }}
+        opts={{ loop: true }}
+        className="relative overflow-hidden"
       >
-        <CarouselContent>
+        <CarouselContent className="ml-0">
           {slides.map((slide) => (
-            <CarouselItem key={slide.id}>
-              <div className={`relative overflow-hidden bg-gradient-to-br ${slide.gradient}`}>
-                {/* Background Image */}
-                <div className="absolute inset-0 opacity-20">
-                  <Image
-                    src={slide.image}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    priority={slide.id === 1}
-                  />
-                </div>
+            <CarouselItem key={slide.id} className="pl-0">
+              <div className="relative h-[560px] sm:h-[620px] lg:h-[720px] xl:h-[780px]">
+                <Image
+                  src={slide.image}
+                  alt=""
+                  fill
+                  priority={slide.id === 1}
+                  sizes="100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+                {/* Oscurece la parte superior para que el menu sea legible */}
+                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/50 to-transparent" />
 
-                {/* Content */}
-                <div className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
-                  <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
-                    {/* Text Content */}
-                    <div className="max-w-xl text-center lg:text-left">
-                      <span className="inline-block rounded-full bg-white/10 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white mb-3">
-                        {slide.badge}
-                      </span>
-                      <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                        {slide.title}
-                        <span className="block text-primary">{slide.subtitle}</span>
-                      </h2>
-                      <p className="mt-3 text-sm sm:text-base text-slate-300 max-w-md mx-auto lg:mx-0">
-                        {slide.description}
-                      </p>
-                      <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                        <Button asChild size="default">
-                          <Link href={slide.href}>{slide.cta}</Link>
-                        </Button>
-                        <Button asChild variant="outline" className="border-slate-600 text-white hover:bg-slate-800">
-                          <Link href="/products">Ver Todo</Link>
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Visual Element */}
-                    <div className="relative w-72 h-52 sm:w-96 sm:h-72 lg:w-[500px] lg:h-80">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 blur-3xl rounded-full" />
-                      <div className="relative h-full rounded-2xl overflow-hidden shadow-2xl">
-                        <Image
-                          src={slide.image}
-                          alt={slide.title}
-                          fill
-                          className="object-cover rounded-2xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div className="container relative z-10 mx-auto flex h-full flex-col justify-center px-4 pt-28 md:pt-16">
+                  <h1 className="max-w-2xl font-display text-5xl leading-[1.05] text-cream sm:text-6xl lg:text-7xl xl:text-8xl">
+                    {slide.title}
+                  </h1>
+                  <Link
+                    href={slide.href}
+                    className="mt-10 inline-flex w-fit items-center rounded-lg bg-cream px-8 py-3.5 text-sm font-medium text-brand-dark transition-colors hover:bg-white"
+                  >
+                    {slide.cta}
+                  </Link>
                 </div>
               </div>
             </CarouselItem>
           ))}
         </CarouselContent>
 
-        {/* Navigation Arrows */}
-        <CarouselPrevious className="left-4 hidden sm:flex" />
-        <CarouselNext className="right-4 hidden sm:flex" />
-
-        {/* Dots Indicator */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {slides.map((_, index) => (
-            <div
-              key={index}
-              className="h-1.5 w-6 rounded-full bg-white/30 transition-colors"
-            />
-          ))}
+        {/* Controles: puntos + flechas, alineados al margen del contenido */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 sm:bottom-10">
+          <div className="container mx-auto flex justify-end px-4">
+            <div className="pointer-events-auto flex items-center gap-3">
+              <div className="flex gap-1.5">
+                {slides.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    onClick={() => api?.scrollTo(index)}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      current === index ? "w-6 bg-white" : "w-2 bg-white/50"
+                    )}
+                    aria-label={`Ir al slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => api?.scrollPrev()}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-black"
+                aria-label="Anterior"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => api?.scrollNext()}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-black"
+                aria-label="Siguiente"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </Carousel>
     </section>

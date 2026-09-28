@@ -1,6 +1,14 @@
+"use client"
+
+import { usePathname } from "next/navigation"
 import { Truck, RotateCcw, ShieldCheck } from "lucide-react"
 
 export function TopBar() {
+  const pathname = usePathname()
+
+  // En el index el header va sobre el slider, sin barra superior
+  if (pathname === "/") return null
+
   return (
     <div className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4">
