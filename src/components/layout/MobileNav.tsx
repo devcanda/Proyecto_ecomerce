@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, Monitor, Keyboard, Mouse, Headphones, HardDrive, Cpu, User, Heart, Package } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Menu, User, Heart, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -12,33 +13,45 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-
-const categories = [
-  { name: "Computadoras", href: "/products?category=computadoras", icon: Monitor },
-  { name: "Monitores", href: "/products?category=monitores", icon: Monitor },
-  { name: "Teclados", href: "/products?category=teclados", icon: Keyboard },
-  { name: "Mouse", href: "/products?category=mouse", icon: Mouse },
-  { name: "Audifonos", href: "/products?category=audifonos", icon: Headphones },
-  { name: "Almacenamiento", href: "/products?category=almacenamiento", icon: HardDrive },
-  { name: "Componentes", href: "/products?category=componentes", icon: Cpu },
-]
+import { cn } from "@/lib/utils"
+import { mainNav, categoryNav as categories, isNavActive } from "./nav-links"
 
 export function MobileNav() {
   const [open, setOpen] = React.useState(false)
+  const pathname = usePathname()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden">
+        <Button variant="ghost" size="icon" className="h-9 w-9 lg:hidden">
           <Menu className="h-4 w-4" />
           <span className="sr-only">Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[350px]">
+      <SheetContent side="left" className="w-[300px] overflow-y-auto sm:w-[350px]">
         <SheetHeader>
           <SheetTitle className="text-left">Menu</SheetTitle>
         </SheetHeader>
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-6 flex flex-col gap-4 pb-6">
+          {/* Main Navigation */}
+          <nav className="flex flex-col gap-1">
+            {mainNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-accent",
+                  isNavActive(pathname, item.href) && "bg-accent text-brand"
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          <Separator />
+
           {/* User Actions */}
           <div className="flex flex-col gap-2">
             <Link

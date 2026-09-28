@@ -1,7 +1,9 @@
 "use client"
 
 import { Suspense, useEffect, useState, useCallback } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { X } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,25 +22,28 @@ import { FilterState } from "@/types"
 
 function ProductsContent() {
   const searchParams = useSearchParams()
-  const { products, loading, filters, setFilters, fetchProducts, fetchCategories, fetchBrands } = useProductsStore()
+  const { products, searchApproximate, loading, filters, setFilters, fetchProducts, fetchCategories, fetchBrands } = useProductsStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
   // Initialize filters from URL params
   useEffect(() => {
     const category = searchParams.get("category")
     const featured = searchParams.get("featured")
+    const search = searchParams.get("search")?.trim() ?? ""
 
-    const initialFilters: Partial<FilterState> = {}
+    // La busqueda siempre se toma de la URL (vacia = sin busqueda)
+    const initialFilters: Partial<FilterState> = { search }
     if (category) {
       initialFilters.categories = [category]
+    } else if (search) {
+      // Una busqueda nueva desde el header busca en todas las categorias
+      initialFilters.categories = []
     }
     if (featured === "true") {
       // This will be handled in the API call
     }
 
-    if (Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters)
-    }
+    setFilters(initialFilters)
 
     fetchCategories()
     fetchBrands()
@@ -76,10 +81,30 @@ function ProductsContent() {
       {/* Results count and controls */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Todos los Productos</h1>
-          <p className="text-sm text-muted-foreground">
-            {loading ? "Cargando..." : `${products.length} productos encontrados`}
-          </p>
+          <h1 className="text-2xl font-bold">
+            {filters.search ? `Resultados para "${filters.search}"` : "Todos los Productos"}
+          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              {loading
+                ? "Cargando..."
+                : `${products.length} ${products.length === 1 ? "producto encontrado" : "productos encontrados"}`}
+            </p>
+            {filters.search && (
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+                Quitar busqueda
+              </Link>
+            )}
+          </div>
+          {filters.search && searchApproximate && !loading && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              No encontramos coincidencias exactas. Mostrando resultados similares a &quot;{filters.search}&quot;.
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-3">

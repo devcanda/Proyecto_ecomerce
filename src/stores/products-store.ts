@@ -3,6 +3,8 @@ import type { Product, Category, Brand, FilterState } from "@/types"
 
 interface ProductsState {
   products: Product[]
+  // true si la busqueda actual solo tiene coincidencias aproximadas (errores de escritura)
+  searchApproximate: boolean
   categories: Category[]
   brands: Brand[]
   featuredProducts: Product[]
@@ -26,10 +28,12 @@ const defaultFilters: FilterState = {
   brands: [],
   priceRange: [0, 10000],
   sortBy: "newest",
+  search: "",
 }
 
 export const useProductsStore = create<ProductsState>((set, get) => ({
   products: [],
+  searchApproximate: false,
   categories: [],
   brands: [],
   featuredProducts: [],
@@ -56,6 +60,9 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (filters.priceRange[1] < 10000) {
         params.set("maxPrice", filters.priceRange[1].toString())
       }
+      if (filters.search.trim()) {
+        params.set("search", filters.search.trim())
+      }
       if (filters.sortBy) {
         params.set("sortBy", filters.sortBy)
       }
@@ -64,7 +71,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (!response.ok) throw new Error("Failed to fetch products")
 
       const data = await response.json()
-      set({ products: data.products, loading: false })
+      set({ products: data.products, searchApproximate: data.approximate ?? false, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }

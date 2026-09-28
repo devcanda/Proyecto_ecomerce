@@ -4,9 +4,8 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { Search, ShoppingCart, Heart, User, LogOut, Settings, Package, ChevronDown } from "lucide-react"
+import { Search, ShoppingCart, Heart, User, LogOut, Settings, Package, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -19,12 +18,16 @@ import {
 import { ThemeToggle } from "./ThemeToggle"
 import { MobileNav } from "./MobileNav"
 import { Logo } from "./Logo"
+import { MainNav } from "./MainNav"
+import { SearchBar } from "./SearchBar"
 import { useCartStore } from "@/stores/cart-store"
 import { cn } from "@/lib/utils"
 
 export function Header() {
   const [mounted, setMounted] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  // Panel de busqueda para escritorio mediano (donde solo se ve el icono)
+  const [searchOpen, setSearchOpen] = useState(false)
   const itemCount = useCartStore((state) => state.getItemCount())
   const { data: session, status } = useSession()
   const pathname = usePathname()
@@ -46,9 +49,9 @@ export function Header() {
   }, [isHome])
 
   const searchInputClass = cn(
-    "w-full pl-10 pr-4",
     transparent && "border-white/25 bg-white/10 text-white placeholder:text-white/60 dark:bg-white/10"
   )
+  const searchIconClass = cn(transparent && "text-white/60 hover:text-white")
 
   return (
     <header
@@ -71,21 +74,14 @@ export function Header() {
             />
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden flex-1 max-w-xl md:flex">
-            <div className="relative w-full">
-              <Search
-                className={cn(
-                  "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2",
-                  transparent ? "text-white/60" : "text-muted-foreground"
-                )}
-              />
-              <Input
-                type="search"
-                placeholder="Buscar productos..."
-                className={searchInputClass}
-              />
-            </div>
+          {/* Search Bar - Tablet (en escritorio su lugar lo ocupa el menu) */}
+          <div className="hidden flex-1 max-w-xl md:flex lg:hidden">
+            <SearchBar inputClassName={searchInputClass} iconClassName={searchIconClass} />
+          </div>
+
+          {/* Navigation - Desktop */}
+          <div className="hidden flex-1 justify-center lg:flex">
+            <MainNav transparent={transparent} />
           </div>
 
           {/* Actions */}
@@ -95,18 +91,25 @@ export function Header() {
               transparent && "[&_button:hover]:bg-white/15 [&_button:hover]:text-white"
             )}
           >
-            {/* Search - Mobile */}
-            <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden">
-              <Search className="h-4 w-4" />
-              <span className="sr-only">Buscar</span>
+            {/* Search - Escritorio mediano (icono que abre el panel) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden h-9 w-9 lg:inline-flex xl:hidden"
+              onClick={() => setSearchOpen((value) => !value)}
+              aria-expanded={searchOpen}
+            >
+              {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+              <span className="sr-only">{searchOpen ? "Cerrar busqueda" : "Buscar"}</span>
             </Button>
 
-            {/* Products Link */}
-            <Link href="/products" className="hidden md:block">
-              <Button variant="ghost" size="sm" className="font-semibold">
-                PRODUCTOS
-              </Button>
-            </Link>
+            {/* Search - Escritorio grande (compacto) */}
+            <SearchBar
+              className="mr-1 hidden w-52 xl:block"
+              inputClassName={cn(searchInputClass, "h-9")}
+              iconClassName={searchIconClass}
+              dropdownClassName="left-auto right-0 w-[26rem]"
+            />
 
             <ThemeToggle />
 
@@ -220,20 +223,28 @@ export function Header() {
 
         {/* Search Bar - Mobile */}
         <div className="pb-3 md:hidden">
-          <div className="relative w-full">
-            <Search
-              className={cn(
-                "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2",
-                transparent ? "text-white/60" : "text-muted-foreground"
-              )}
-            />
-            <Input
-              type="search"
-              placeholder="Buscar productos..."
-              className={searchInputClass}
+          <SearchBar
+            inputClassName={searchInputClass}
+            iconClassName={searchIconClass}
+            dropdownClassName="min-w-0"
+          />
+        </div>
+
+        {/* Search Panel - Escritorio mediano */}
+        {searchOpen && (
+          <div
+            className="hidden pb-4 lg:block xl:hidden"
+            onKeyDown={(event) => event.key === "Escape" && setSearchOpen(false)}
+          >
+            <SearchBar
+              className="mx-auto max-w-2xl"
+              inputClassName={searchInputClass}
+              iconClassName={searchIconClass}
+              autoFocus
+              onNavigate={() => setSearchOpen(false)}
             />
           </div>
-        </div>
+        )}
       </div>
     </header>
   )

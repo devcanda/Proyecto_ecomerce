@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
+import { searchProducts } from "@/lib/search"
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,12 +46,14 @@ export async function GET(request: NextRequest) {
       where.isNew = true
     }
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-      ]
+    // Busqueda tolerante a errores de escritura: se resuelve a una lista de ids con puntaje
+    const term = search?.trim()
+    const searchResult = term ? await searchProducts(term) : null
+    if (searchResult) {
+      where.id = { in: [...searchResult.scores.keys()] }
     }
+    // Sin orden explicito, los resultados de busqueda se ordenan por relevancia
+    const sortByRelevance = searchResult !== null && !searchParams.has("sortBy")
 
     // Build orderBy
     let orderBy: Record<string, string> = { createdAt: "desc" }
@@ -69,16 +72,27 @@ export async function GET(request: NextRequest) {
         break
     }
 
-    const products = await prisma.product.findMany({
+    const take = limit ? Number(limit) : undefined
+    const skip = offset ? Number(offset) : 0
+
+    let products = await prisma.product.findMany({
       where,
       orderBy,
       include: {
         category: true,
         brand: true,
       },
-      take: limit ? Number(limit) : undefined,
-      skip: offset ? Number(offset) : undefined,
+      // La paginacion por relevancia se aplica despues de ordenar por puntaje
+      take: sortByRelevance ? undefined : take,
+      skip: sortByRelevance ? undefined : skip,
     })
+
+    if (sortByRelevance && searchResult) {
+      const scores = searchResult.scores
+      products = products
+        .sort((a, b) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0))
+        .slice(skip, take !== undefined ? skip + take : undefined)
+    }
 
     const total = await prisma.product.count({ where })
 
@@ -86,7 +100,9 @@ export async function GET(request: NextRequest) {
       products: products.map(transformProduct),
       total,
       limit: limit ? Number(limit) : null,
-      offset: offset ? Number(offset) : 0,
+      offset: skip,
+      // true cuando solo hay coincidencias aproximadas (ej. "mnitor")
+      approximate: searchResult?.approximate ?? false,
     })
   } catch (error) {
     console.error("Error fetching products:", error)
