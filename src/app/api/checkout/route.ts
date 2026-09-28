@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
 import { auth } from "@/lib/auth"
+import { CURRENCY } from "@/lib/format"
+
+const STRIPE_CURRENCY = CURRENCY.toLowerCase()
 
 interface CartItem {
   id: string
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Create line items for Stripe
     const lineItems = items.map((item) => ({
       price_data: {
-        currency: "pen", // Peruvian Sol
+        currency: STRIPE_CURRENCY,
         product_data: {
           name: item.name,
           images: item.image ? [item.image] : [],
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
               type: "fixed_amount" as const,
               fixed_amount: {
                 amount: 0,
-                currency: "pen",
+                currency: STRIPE_CURRENCY,
               },
               display_name: "Envio gratis",
               delivery_estimate: {
@@ -77,8 +80,8 @@ export async function POST(request: NextRequest) {
             shipping_rate_data: {
               type: "fixed_amount" as const,
               fixed_amount: {
-                amount: 1500, // S/ 15.00
-                currency: "pen",
+                amount: 1500, // 15,00 COP (Stripe usa centavos)
+                currency: STRIPE_CURRENCY,
               },
               display_name: "Envio express",
               delivery_estimate: {
@@ -93,8 +96,8 @@ export async function POST(request: NextRequest) {
             shipping_rate_data: {
               type: "fixed_amount" as const,
               fixed_amount: {
-                amount: 1500, // S/ 15.00
-                currency: "pen",
+                amount: 1500, // 15,00 COP (Stripe usa centavos)
+                currency: STRIPE_CURRENCY,
               },
               display_name: "Envio estandar",
               delivery_estimate: {
@@ -107,8 +110,8 @@ export async function POST(request: NextRequest) {
             shipping_rate_data: {
               type: "fixed_amount" as const,
               fixed_amount: {
-                amount: 3000, // S/ 30.00
-                currency: "pen",
+                amount: 3000, // 30,00 COP (Stripe usa centavos)
+                currency: STRIPE_CURRENCY,
               },
               display_name: "Envio express",
               delivery_estimate: {

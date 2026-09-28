@@ -65,16 +65,13 @@ export function PriceFilter({
 
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground">Min</label>
+              <label className="text-xs text-muted-foreground">Min (COP)</label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  S/
-                </span>
                 <Input
                   type="number"
                   value={priceRange[0]}
                   onChange={handleMinChange}
-                  className="pl-7 h-9 text-sm"
+                  className="h-9 text-sm"
                   min={minPrice}
                   max={priceRange[1]}
                 />
@@ -82,16 +79,13 @@ export function PriceFilter({
             </div>
             <span className="mt-4 text-muted-foreground">-</span>
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground">Max</label>
+              <label className="text-xs text-muted-foreground">Max (COP)</label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  S/
-                </span>
                 <Input
                   type="number"
                   value={priceRange[1]}
                   onChange={handleMaxChange}
-                  className="pl-7 h-9 text-sm"
+                  className="h-9 text-sm"
                   min={priceRange[0]}
                   max={maxPrice}
                 />

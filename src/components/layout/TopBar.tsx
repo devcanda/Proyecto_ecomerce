@@ -10,7 +10,7 @@ export function TopBar() {
   if (pathname === "/") return null
 
   return (
-    <div className="bg-primary text-primary-foreground">
+    <div className="bg-brand-dark text-white">
       <div className="container mx-auto px-4">
         <div className="flex h-9 items-center justify-between text-xs">
           <div className="flex items-center gap-1">

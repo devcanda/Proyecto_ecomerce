@@ -99,12 +99,12 @@ export default function AdminSettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Moneda</Label>
-                  <Select defaultValue="pen">
+                  <Select defaultValue="cop">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pen">Soles (S/)</SelectItem>
+                      <SelectItem value="cop">Pesos colombianos (COP)</SelectItem>
                       <SelectItem value="usd">Dolares ($)</SelectItem>
                       <SelectItem value="eur">Euros (EUR)</SelectItem>
                     </SelectContent>
@@ -171,7 +171,7 @@ export default function AdminSettingsPage() {
                   <Input type="number" defaultValue="15" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Envio gratis desde (S/)</Label>
+                  <Label>Envio gratis desde (COP)</Label>
                   <Input type="number" defaultValue="200" />
                 </div>
               </div>

@@ -27,7 +27,7 @@ function Tile({ title, cta, href, image, className, sizes, withArrow }: TileProp
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 p-5 sm:p-8">
         <p className="font-display text-3xl text-white sm:text-4xl">{title}</p>
-        <span className="mt-3 inline-flex items-center gap-6 rounded-md bg-white px-4 py-2 text-xs font-medium text-brand-dark transition-colors group-hover:bg-cream">
+        <span className="mt-3 inline-flex items-center gap-6 rounded-md bg-white px-4 py-2 text-xs font-medium text-brand-dark transition-colors group-hover:bg-brand">
           {cta}
           {withArrow && <ArrowUpRight className="h-4 w-4" />}
         </span>

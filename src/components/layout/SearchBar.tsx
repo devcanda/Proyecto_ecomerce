@@ -11,6 +11,7 @@ import { Loader2, Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types"
+import { Price } from "@/components/ui/price"
 
 const searchSchema = z.object({
   query: z.string().trim().min(1).max(100),
@@ -243,7 +244,7 @@ function SearchBarInner({
                         </p>
                       </div>
                       <span className="shrink-0 text-sm font-semibold">
-                        S/ {product.price.toFixed(2)}
+                        <Price amount={product.price} />
                       </span>
                     </Link>
                   </li>
@@ -252,7 +253,7 @@ function SearchBarInner({
               <Link
                 href={`/products?search=${encodeURIComponent(term)}`}
                 onClick={close}
-                className="flex items-center justify-center gap-2 border-t px-4 py-3 text-sm font-medium text-brand transition-colors hover:bg-accent"
+                className="flex items-center justify-center gap-2 border-t px-4 py-3 text-sm font-medium text-brand-link transition-colors hover:bg-accent"
               >
                 <Search className="h-3.5 w-3.5" />
                 Ver {total === 1 ? "el resultado" : `los ${total} resultados`}

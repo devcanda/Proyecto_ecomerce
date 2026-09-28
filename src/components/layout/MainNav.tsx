@@ -25,7 +25,7 @@ export function MainNav({ transparent }: MainNavProps) {
     cn(
       "relative inline-flex items-center gap-1 px-3 py-2 text-[13px] font-semibold uppercase tracking-wide transition-colors",
       "after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:transition-transform after:origin-left",
-      transparent ? "after:bg-cream" : "after:bg-brand",
+      "after:bg-brand",
       active
         ? cn("after:scale-x-100", transparent ? "text-white" : "text-foreground")
         : cn(

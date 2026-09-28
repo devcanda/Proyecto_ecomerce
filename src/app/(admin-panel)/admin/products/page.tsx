@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Price } from "@/components/ui/price"
 
 interface Product {
   id: string
@@ -292,7 +293,7 @@ export default function AdminProductsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="capitalize">{product.category}</TableCell>
-                      <TableCell>S/ {product.price.toFixed(2)}</TableCell>
+                      <TableCell><Price amount={product.price} /></TableCell>
                       <TableCell>{product.stock}</TableCell>
                       <TableCell>
                         {product.stock > 0 ? (

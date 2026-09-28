@@ -38,7 +38,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
             variant="ghost"
             size="sm"
             onClick={handleClearFilters}
-            className="h-auto p-0 text-sm text-primary hover:text-primary/80"
+            className="h-auto p-0 text-sm text-brand-link hover:text-brand-link/80"
           >
             Limpiar
             <X className="ml-1 h-3 w-3" />

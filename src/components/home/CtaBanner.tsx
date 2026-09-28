@@ -19,7 +19,7 @@ export function CtaBanner() {
           </h2>
           <Link
             href="/products"
-            className="mt-8 rounded-md bg-cream px-6 py-3 text-sm font-medium text-brand-dark transition-colors hover:bg-white"
+            className="mt-8 rounded-md bg-brand px-6 py-3 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
           >
             Comprar Ahora
           </Link>

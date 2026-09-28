@@ -42,7 +42,7 @@ export function MobileNav() {
                 onClick={() => setOpen(false)}
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-accent",
-                  isNavActive(pathname, item.href) && "bg-accent text-brand"
+                  isNavActive(pathname, item.href) && "bg-accent text-brand-link"
                 )}
               >
                 {item.name}

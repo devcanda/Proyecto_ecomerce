@@ -18,7 +18,8 @@ export function HomeCollections() {
     <>
       <ProductShowcase
         title="Recién Llegados"
-        subtitle="Los últimos lanzamientos en tecnología, seleccionados para ofrecerte rendimiento y calidad garantizada."
+        titleFont="jakarta"
+        subtitle="Descubre lo más nuevo de nuestra tienda: tecnología, calzado y artículos variados, seleccionados con calidad garantizada."
         products={newProducts}
         moreHref="/products"
       />

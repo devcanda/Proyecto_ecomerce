@@ -16,22 +16,22 @@ import { cn } from "@/lib/utils"
 const slides = [
   {
     id: 1,
-    title: "Tecnología Que Eleva Tu Setup Cada Día",
-    cta: "Comprar Ahora",
+    title: "Tecnología que eleva tu setup cada día",
+    cta: "Comprar ahora",
     href: "/products",
     image: "https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d2?w=1800",
   },
   {
     id: 2,
-    title: "Juega Sin Límites Con Lo Último En Gaming",
-    cta: "Ver Componentes",
+    title: "Juega sin límites con lo último en gaming",
+    cta: "Ver componentes",
     href: "/products?category=componentes",
     image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=1800",
   },
   {
     id: 3,
-    title: "Monitores Que Transforman Tu Espacio",
-    cta: "Ver Monitores",
+    title: "Monitores que transforman tu espacio",
+    cta: "Ver monitores",
     href: "/products?category=monitores",
     image: "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=1800",
   },
@@ -79,12 +79,12 @@ export function HeroBanner() {
                 <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/50 to-transparent" />
 
                 <div className="container relative z-10 mx-auto flex h-full flex-col justify-center px-4 pt-28 md:pt-16">
-                  <h1 className="max-w-2xl font-display text-5xl leading-[1.05] text-cream sm:text-6xl lg:text-7xl xl:text-8xl">
+                  <h1 className="max-w-md text-balance font-jakarta text-4xl font-bold leading-[1.1] tracking-tight text-cream sm:max-w-lg sm:text-5xl lg:max-w-2xl lg:text-[3.5rem] xl:text-6xl">
                     {slide.title}
                   </h1>
                   <Link
                     href={slide.href}
-                    className="mt-10 inline-flex w-fit items-center rounded-lg bg-cream px-8 py-3.5 text-sm font-medium text-brand-dark transition-colors hover:bg-white"
+                    className="mt-8 inline-flex w-fit items-center rounded-lg bg-brand px-8 py-3.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
                   >
                     {slide.cta}
                   </Link>
@@ -113,14 +113,14 @@ export function HeroBanner() {
               </div>
               <button
                 onClick={() => api?.scrollPrev()}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-black"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-brand hover:text-brand-foreground"
                 aria-label="Anterior"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => api?.scrollNext()}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-black"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-dark text-white transition-colors hover:bg-brand hover:text-brand-foreground"
                 aria-label="Siguiente"
               >
                 <ArrowRight className="h-4 w-4" />

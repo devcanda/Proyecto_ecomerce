@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { Price } from "@/components/ui/price"
+import { formatPrice } from "@/lib/format"
 
 interface ProductDetailProps {
   product: Product
@@ -72,12 +74,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
       {/* Price */}
       <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-bold text-primary">
-          S/ {product.price.toFixed(2)}
+        <span className="text-3xl font-bold">
+          <Price amount={product.price} />
         </span>
         {hasDiscount && (
           <span className="text-lg text-muted-foreground line-through">
-            S/ {product.originalPrice!.toFixed(2)}
+            <Price amount={product.originalPrice!} />
           </span>
         )}
       </div>
@@ -165,7 +167,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <Truck className="h-5 w-5 text-muted-foreground" />
           <div>
             <p className="font-medium">Envio gratis</p>
-            <p className="text-xs text-muted-foreground">En pedidos +S/ 200</p>
+            <p className="text-xs text-muted-foreground">En pedidos desde {formatPrice(200)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-sm">

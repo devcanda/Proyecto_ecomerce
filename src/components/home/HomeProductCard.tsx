@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Check } from "lucide-react"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { Price } from "@/components/ui/price"
 
 interface HomeProductCardProps {
   product: Product
@@ -49,14 +50,14 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
       </Link>
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="text-2xl font-semibold">S/ {product.price.toFixed(2)}</span>
+        <span className="text-2xl font-semibold"><Price amount={product.price} /></span>
         <span className="rounded-full bg-muted px-3 py-1 text-[11px] capitalize text-muted-foreground">
           {product.category}
         </span>
       </div>
 
       <Link href={`/products/${product.slug}`}>
-        <h3 className="mt-2 font-medium transition-colors hover:text-brand">
+        <h3 className="mt-2 font-medium transition-colors hover:text-brand-link">
           {product.name}
         </h3>
       </Link>
@@ -68,7 +69,7 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
         <button
           onClick={handleAddToCart}
           disabled={outOfStock}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-muted px-4 py-2.5 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-brand-blue/10 px-4 py-2.5 text-xs font-semibold text-brand-link transition-colors hover:bg-brand-blue/20 disabled:opacity-50"
         >
           {added && <Check className="h-3.5 w-3.5" />}
           {outOfStock ? "Agotado" : added ? "Agregado" : "Agregar"}
@@ -76,7 +77,7 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
         <button
           onClick={handleBuyNow}
           disabled={outOfStock}
-          className="rounded-md bg-brand px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-brand-hover disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2.5 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-hover disabled:opacity-50"
         >
           Comprar
         </button>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { Price } from "@/components/ui/price"
 
 interface ProductCardProps {
   product: Product
@@ -101,7 +102,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Name */}
         <Link href={`/products/${product.slug}`}>
-          <h3 className="mt-1 font-medium leading-tight line-clamp-2 hover:text-primary transition-colors">
+          <h3 className="mt-1 font-medium leading-tight line-clamp-2 hover:text-brand-link transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -114,12 +115,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Price */}
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-primary">
-            S/ {product.price.toFixed(2)}
+          <span className="text-lg font-bold">
+            <Price amount={product.price} />
           </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
-              S/ {product.originalPrice!.toFixed(2)}
+              <Price amount={product.originalPrice!} />
             </span>
           )}
         </div>

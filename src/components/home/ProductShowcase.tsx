@@ -9,12 +9,13 @@ interface ProductShowcaseProps {
   subtitle: string
   products: Product[]
   moreHref: string
+  titleFont?: "display" | "jakarta"
 }
 
 const PER_ROW = 4
 const MAX_ROWS = 2
 
-export function ProductShowcase({ title, subtitle, products, moreHref }: ProductShowcaseProps) {
+export function ProductShowcase({ title, subtitle, products, moreHref, titleFont }: ProductShowcaseProps) {
   // Solo filas completas de 4 (maximo 2 filas) para que la cuadricula no quede descuadrada
   const fullRows = Math.min(Math.floor(products.length / PER_ROW), MAX_ROWS)
   const visibleProducts =
@@ -22,7 +23,7 @@ export function ProductShowcase({ title, subtitle, products, moreHref }: Product
 
   return (
     <section className="container mx-auto px-4 pt-16 sm:pt-24">
-      <SectionHeading title={title} subtitle={subtitle} />
+      <SectionHeading title={title} subtitle={subtitle} font={titleFont} />
 
       <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
         {products.length === 0

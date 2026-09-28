@@ -8,11 +8,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-dm-serif);
-  --color-brand: oklch(0.47 0.06 60);
-  --color-brand-hover: oklch(0.41 0.06 60);
-  --color-brand-dark: oklch(0.24 0.02 60);
-  --color-cream: oklch(0.95 0.015 75);
+  --font-display: var(--font-fraunces);
+  --font-jakarta: var(--font-plus-jakarta);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-link: var(--brand-link);
+  --color-brand-dark: var(--brand-dark);
+  --color-cream: var(--cream);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -53,14 +57,22 @@
 
 :root {
   --radius: 0.625rem;
+  /* Colores de marca (logo Compra En Linea) */
+  --brand: oklch(0.732 0.185 52.6); /* naranja del logo #FF8008 */
+  --brand-hover: oklch(0.687 0.183 49.5); /* #F07000 */
+  --brand-foreground: oklch(0.285 0.045 222.1); /* texto sobre naranja: azul noche (5.6:1) */
+  --brand-blue: oklch(0.672 0.117 212.5); /* azul del logo #00A8C0 */
+  --brand-link: oklch(0.526 0.092 212.8); /* azul profundo para texto #00788A (5.2:1) */
+  --brand-dark: oklch(0.285 0.045 222.1); /* azul noche #0B2F3A: footer, barra superior */
+  --cream: oklch(0.977 0.016 70.5); /* blanco calido #FFF6EC */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -70,7 +82,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: var(--brand);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -78,8 +90,8 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
@@ -87,14 +99,15 @@
 }
 
 .dark {
+  --brand-link: oklch(0.767 0.118 207.7); /* azul claro legible sobre fondo oscuro #3CC8DA */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -104,7 +117,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--brand);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -112,8 +125,8 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
@@ -126,5 +139,11 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Titulos con Fraunces: terminaciones suaves y tamano optico automatico */
+  .font-display {
+    font-weight: 600;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 100;
   }
 }

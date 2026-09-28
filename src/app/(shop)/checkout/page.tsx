@@ -63,7 +63,7 @@ export default function CheckoutPage() {
                     currentStep > step.id
                       ? "border-primary bg-primary text-primary-foreground"
                       : currentStep === step.id
-                      ? "border-primary text-primary"
+                      ? "border-primary text-brand-link"
                       : "border-muted-foreground/30 text-muted-foreground"
                   }`}
                 >

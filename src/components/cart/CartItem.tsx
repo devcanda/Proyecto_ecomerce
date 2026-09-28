@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CartItem as CartItemType } from "@/types"
+import { Price } from "@/components/ui/price"
 
 interface CartItemProps {
   item: CartItemType
@@ -35,7 +36,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             <p className="text-xs text-muted-foreground">{product.brand}</p>
             <Link
               href={`/products/${product.id}`}
-              className="font-medium hover:text-primary transition-colors line-clamp-2"
+              className="font-medium hover:text-brand-link transition-colors line-clamp-2"
             >
               {product.name}
             </Link>
@@ -76,12 +77,12 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
           {/* Price */}
           <div className="text-right">
-            <p className="font-semibold text-primary">
-              S/ {(product.price * quantity).toFixed(2)}
+            <p className="font-semibold">
+              <Price amount={product.price * quantity} />
             </p>
             {quantity > 1 && (
               <p className="text-xs text-muted-foreground">
-                S/ {product.price.toFixed(2)} c/u
+                <Price amount={product.price} /> c/u
               </p>
             )}
           </div>

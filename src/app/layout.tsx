@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono, DM_Serif_Display } from "next/font/google"
+import { Geist, Geist_Mono, Fraunces, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { SessionProvider } from "@/components/providers/SessionProvider"
@@ -14,10 +14,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-const dmSerif = DM_Serif_Display({
-  variable: "--font-dm-serif",
+// Serif de terminaciones suaves para titulos (variable: grosor, tamano optico y suavidad)
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: "400",
+  axes: ["SOFT", "opsz"],
+})
+
+// Sans moderna para el titulo del slider principal
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
 })
 
 export const metadata: Metadata = {
@@ -33,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${dmSerif.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${plusJakarta.variable} antialiased`}
       >
         <SessionProvider>
           <ThemeProvider

@@ -206,7 +206,7 @@ export function Header() {
                     <Link href="/register">
                       <Button
                         size="sm"
-                        className={cn(transparent && "bg-cream text-brand-dark hover:bg-white hover:text-brand-dark")}
+                        className="font-semibold"
                       >
                         Registrarse
                       </Button>

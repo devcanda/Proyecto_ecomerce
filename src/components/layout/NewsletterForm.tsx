@@ -42,7 +42,7 @@ export function NewsletterForm() {
         />
         <button
           type="submit"
-          className="rounded bg-cream px-4 py-2 text-xs font-medium text-brand-dark transition-colors hover:bg-white"
+          className="rounded bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
         >
           Suscribirme
         </button>

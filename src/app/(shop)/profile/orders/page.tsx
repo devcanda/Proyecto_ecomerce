@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUserStore } from "@/stores/user-store"
+import { Price } from "@/components/ui/price"
 
 const statusConfig = {
   pending: { label: "Pendiente", variant: "secondary" as const },
@@ -130,7 +131,7 @@ export default function OrdersPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.name}</p>
                           <p className="text-sm">
-                            S/ {item.price.toFixed(2)} x {item.quantity}
+                            <Price amount={item.price} /> x {item.quantity}
                           </p>
                         </div>
                       </div>
@@ -153,7 +154,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <p className="font-semibold">
-                        Total: S/ {order.total.toFixed(2)}
+                        Total: <Price amount={order.total} />
                       </p>
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/profile/orders/${order.id}`}>

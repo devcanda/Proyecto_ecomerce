@@ -173,7 +173,7 @@ export function RegisterForm() {
                 </Button>
                 <FieldDescription className="text-center">
                   ¿Ya tienes una cuenta?{" "}
-                  <Link href="/login" className="text-primary hover:underline">
+                  <Link href="/login" className="text-brand-link hover:underline">
                     Iniciar Sesión
                   </Link>
                 </FieldDescription>
@@ -184,11 +184,11 @@ export function RegisterForm() {
       </Card>
       <FieldDescription className="px-6 text-center">
         Al continuar, aceptas nuestros{" "}
-        <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+        <Link href="/terms" className="underline underline-offset-4 hover:text-brand-link">
           Términos de Servicio
         </Link>{" "}
         y{" "}
-        <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-brand-link">
           Política de Privacidad
         </Link>
         .

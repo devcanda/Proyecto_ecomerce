@@ -3,6 +3,8 @@
 import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { CartItem } from "@/types"
+import { Price } from "@/components/ui/price"
+import { formatPrice } from "@/lib/format"
 
 interface OrderSummaryProps {
   items: CartItem[]
@@ -42,7 +44,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
               <p className="text-xs text-muted-foreground">{item.product.brand}</p>
             </div>
             <p className="text-sm font-medium">
-              S/ {(item.product.price * item.quantity).toFixed(2)}
+              <Price amount={item.product.price * item.quantity} />
             </p>
           </div>
         ))}
@@ -54,7 +56,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>S/ {subtotal.toFixed(2)}</span>
+          <span><Price amount={subtotal} /></span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">IGV (18%)</span>
@@ -62,7 +64,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Envio</span>
-          <span>{shipping === 0 ? "Gratis" : `S/ ${shipping.toFixed(2)}`}</span>
+          <span>{shipping === 0 ? "Gratis" : formatPrice(shipping)}</span>
         </div>
       </div>
 
@@ -70,7 +72,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
 
       <div className="flex justify-between font-semibold">
         <span>Total</span>
-        <span className="text-lg text-primary">S/ {total.toFixed(2)}</span>
+        <span className="text-lg font-bold"><Price amount={total} /></span>
       </div>
     </div>
   )
