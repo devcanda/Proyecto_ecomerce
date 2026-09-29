@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, ShoppingCart, Star, Minus, Plus, Truck, RotateCcw, ShieldCheck, Check } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Heart, ShoppingCart, Star, Minus, Plus, Truck, RotateCcw, ShieldCheck, Check, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -18,6 +19,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
+  const router = useRouter()
 
   const hasDiscount = product.originalPrice && product.originalPrice > product.price
   const discountPercent = hasDiscount
@@ -38,21 +40,31 @@ export function ProductDetail({ product }: ProductDetailProps) {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  // Compra directa: agrega la cantidad elegida y lleva al carrito para finalizar
+  const handleBuyNow = () => {
+    addItem(product, quantity)
+    router.push("/cart")
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Badges */}
-      <div className="flex gap-2">
-        {product.isNew && (
-          <Badge className="bg-primary text-primary-foreground">Nuevo</Badge>
+      {/* Badges y marca */}
+      <div className="flex flex-col gap-3">
+        {(product.isNew || hasDiscount) && (
+          <div className="flex gap-2">
+            {product.isNew && (
+              <Badge className="bg-primary text-primary-foreground">Nuevo</Badge>
+            )}
+            {hasDiscount && <Badge variant="destructive">-{discountPercent}%</Badge>}
+          </div>
         )}
-        {hasDiscount && <Badge variant="destructive">-{discountPercent}%</Badge>}
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-link">
+          {product.brand}
+        </p>
+
+        {/* Name */}
+        <h1 className="text-2xl font-bold sm:text-3xl">{product.name}</h1>
       </div>
-
-      {/* Brand */}
-      <p className="text-sm text-muted-foreground">{product.brand}</p>
-
-      {/* Name */}
-      <h1 className="text-2xl font-bold sm:text-3xl">{product.name}</h1>
 
       {/* Rating */}
       <div className="flex items-center gap-2">
@@ -159,26 +171,43 @@ export function ProductDetail({ product }: ProductDetailProps) {
         </div>
       </div>
 
+      {/* Comprar ahora */}
+      <button
+        type="button"
+        onClick={handleBuyNow}
+        disabled={product.stock === 0}
+        className="-mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-brand-blue/85 px-6 text-sm font-bold text-white transition-colors hover:bg-brand-blue disabled:pointer-events-none disabled:opacity-50"
+      >
+        <Zap className="h-4 w-4" />
+        Comprar ahora
+      </button>
+
       <Separator />
 
       {/* Benefits */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 rounded-xl bg-muted/60 p-4 sm:grid-cols-3">
         <div className="flex items-center gap-3 text-sm">
-          <Truck className="h-5 w-5 text-muted-foreground" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-brand-link">
+            <Truck className="h-[18px] w-[18px]" />
+          </span>
           <div>
             <p className="font-medium">Envio gratis</p>
             <p className="text-xs text-muted-foreground">En pedidos desde {formatPrice(200)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <RotateCcw className="h-5 w-5 text-muted-foreground" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-brand-link">
+            <RotateCcw className="h-[18px] w-[18px]" />
+          </span>
           <div>
             <p className="font-medium">Devoluciones</p>
             <p className="text-xs text-muted-foreground">30 dias para devolver</p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-brand-link">
+            <ShieldCheck className="h-[18px] w-[18px]" />
+          </span>
           <div>
             <p className="font-medium">Garantia</p>
             <p className="text-xs text-muted-foreground">1 ano de garantia</p>
@@ -192,11 +221,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <Separator />
           <div>
             <h3 className="font-semibold mb-3">Especificaciones</h3>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
+            {/* Tabla con filas alternadas */}
+            <dl className="overflow-hidden rounded-xl border text-sm">
               {Object.entries(product.specs).map(([key, value]) => (
-                <div key={key} className="flex flex-col">
-                  <dt className="text-muted-foreground">{key}</dt>
-                  <dd className="font-medium">{value}</dd>
+                <div key={key} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] even:bg-muted/40 odd:bg-muted/80">
+                  <dt className="px-4 py-2.5 font-medium">{key}</dt>
+                  <dd className="px-4 py-2.5 text-muted-foreground">{value}</dd>
                 </div>
               ))}
             </dl>

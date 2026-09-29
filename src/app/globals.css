@@ -104,8 +104,8 @@
 }
 
 .dark {
-  /* Footer: blanco en modo oscuro */
-  --footer: oklch(1 0 0);
+  /* Footer: gris claro en modo oscuro */
+  --footer: oklch(0.87 0 0); /* #D4D4D4 gris claro */
   --footer-foreground: oklch(0 0 0);
   --brand-link: oklch(0.772 0.117 204.9); /* azul corporativo claro sobre fondo oscuro #3FCAD8 */
   --background: oklch(0.145 0 0);

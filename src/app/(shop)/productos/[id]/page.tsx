@@ -70,15 +70,17 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <Skeleton className="mb-6 h-6 w-64" />
-        <div className="grid gap-8 lg:grid-cols-2">
-          <Skeleton className="aspect-square rounded-lg" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-12 w-full" />
+      <div className="bg-neutral-100 dark:bg-transparent">
+        <div className="container mx-auto px-4 py-6">
+          <Skeleton className="mb-6 h-6 w-64" />
+          <div className="grid gap-8 rounded-2xl bg-card p-4 sm:p-6 lg:grid-cols-[460px_1fr] lg:gap-12 lg:p-8">
+            <Skeleton className="aspect-square rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
         </div>
       </div>
@@ -100,61 +102,64 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Back Button - Mobile */}
-      <Button
-        variant="ghost"
-        asChild
-        className="mb-4 -ml-2 sm:hidden"
-      >
-        <Link href="/productos">
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Volver
-        </Link>
-      </Button>
+    // Modo claro: fondo gris suave con el producto en una tarjeta blanca (igual que el listado)
+    <div className="bg-neutral-100 dark:bg-transparent">
+      <div className="container mx-auto px-4 py-6">
+        {/* Back Button - Mobile */}
+        <Button
+          variant="ghost"
+          asChild
+          className="mb-4 -ml-2 sm:hidden"
+        >
+          <Link href="/productos">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Volver
+          </Link>
+        </Button>
 
-      {/* Breadcrumb - Desktop */}
-      <Breadcrumb className="mb-6 hidden sm:flex">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Inicio</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/productos">Productos</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/productos?category=${product.category}`}>
-              {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-[200px] truncate">
-              {product.name}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+        {/* Breadcrumb - Desktop */}
+        <Breadcrumb className="mb-6 hidden sm:flex">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Inicio</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/productos">Productos</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`/productos?category=${product.category}`}>
+                {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="max-w-[200px] truncate">
+                {product.name}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      {/* Product Content */}
-      <div className="grid gap-8 lg:grid-cols-2">
-        <ProductGallery images={product.images} productName={product.name} />
-        <ProductDetail product={product} />
+        {/* Product Content */}
+        <div className="grid gap-8 rounded-2xl border border-black/[0.06] bg-card p-4 shadow-[0_1px_3px_rgb(0_0_0/0.06),0_6px_16px_rgb(0_0_0/0.06)] sm:p-6 lg:grid-cols-[460px_1fr] lg:gap-12 lg:p-8 dark:border-border dark:shadow-none">
+          <ProductGallery images={product.images} productName={product.name} />
+          <ProductDetail product={product} />
+        </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <section className="mt-16">
+            <h2 className="mb-6 text-2xl font-bold">Productos Relacionados</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <section className="mt-16">
-          <h2 className="mb-6 text-2xl font-bold">Productos Relacionados</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {relatedProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   )
 }
