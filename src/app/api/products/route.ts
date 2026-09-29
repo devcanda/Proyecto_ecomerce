@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { slugify } from "@/lib/slug"
 import { transformProduct } from "@/lib/transformers"
 import { searchProducts } from "@/lib/search"
 
@@ -117,10 +118,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // Si no llega el slug se genera a partir del nombre
+    const slug =
+      typeof body.slug === "string" && body.slug.trim()
+        ? body.slug.trim()
+        : slugify(String(body.name ?? ""))
+
     const product = await prisma.product.create({
       data: {
         name: body.name,
-        slug: body.slug,
+        slug,
         description: body.description,
         price: body.price,
         comparePrice: body.comparePrice,
@@ -131,6 +138,7 @@ export async function POST(request: NextRequest) {
         isFeatured: body.isFeatured || false,
         categoryId: body.categoryId,
         brandId: body.brandId,
+        modelId: body.modelId || null,
       },
       include: {
         category: true,

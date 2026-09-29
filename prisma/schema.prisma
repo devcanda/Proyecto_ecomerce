@@ -80,8 +80,27 @@ model Brand {
   updatedAt DateTime @updatedAt
 
   products Product[]
+  models   ProductModel[]
 
   @@map("brands")
+}
+
+// Modelo de un producto dentro de una marca (ej. Nike -> Air Max 90, Logitech -> G Pro X)
+model ProductModel {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  products Product[]
+
+  @@unique([brandId, slug])
+  @@index([brandId])
+  @@map("product_models")
 }
 
 model Product {
@@ -106,10 +125,14 @@ model Product {
   brandId String
   brand   Brand @relation(fields: [brandId], references: [id])
 
+  modelId String?
+  model   ProductModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
   orderItems OrderItem[]
 
   @@index([categoryId])
   @@index([brandId])
+  @@index([modelId])
   @@index([slug])
   @@map("products")
 }

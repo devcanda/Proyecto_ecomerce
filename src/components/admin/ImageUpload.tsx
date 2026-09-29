@@ -20,6 +20,7 @@ interface ImageUploadProps {
 export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleUpload = useCallback(
     async (files: FileList | null) => {
@@ -30,6 +31,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
 
       const filesToUpload = Array.from(files).slice(0, remainingSlots)
       setUploading(true)
+      setError(null)
 
       try {
         const uploadPromises = filesToUpload.map(async (file) => {
@@ -49,10 +51,22 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
           return response.json()
         })
 
-        const results = await Promise.all(uploadPromises)
-        onChange([...value, ...results])
-      } catch (error) {
-        console.error("Error uploading images:", error)
+        // Se conservan las imagenes que si se subieron aunque alguna falle
+        const results = await Promise.allSettled(uploadPromises)
+        const uploaded = results
+          .filter((result): result is PromiseFulfilledResult<UploadedImage> => result.status === "fulfilled")
+          .map((result) => result.value)
+        const failed = results.filter((result) => result.status === "rejected")
+
+        if (uploaded.length > 0) onChange([...value, ...uploaded])
+        if (failed.length > 0) {
+          const reason = (failed[0] as PromiseRejectedResult).reason
+          setError(
+            `No se pudo subir ${failed.length === 1 ? "1 imagen" : `${failed.length} imagenes`}: ${
+              reason instanceof Error ? reason.message : "Error al subir imagen"
+            }`
+          )
+        }
       } finally {
         setUploading(false)
       }
@@ -64,13 +78,15 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
     async (index: number) => {
       const imageToRemove = value[index]
 
-      // Eliminar de Cloudinary
-      try {
-        await fetch(`/api/upload?publicId=${encodeURIComponent(imageToRemove.publicId)}`, {
-          method: "DELETE",
-        })
-      } catch (error) {
-        console.error("Error deleting image from Cloudinary:", error)
+      // Solo se borran del almacenamiento las imagenes recien subidas (las ya guardadas no tienen publicId)
+      if (imageToRemove.publicId) {
+        try {
+          await fetch(`/api/upload?publicId=${encodeURIComponent(imageToRemove.publicId)}`, {
+            method: "DELETE",
+          })
+        } catch (error) {
+          console.error("Error deleting image:", error)
+        }
       }
 
       // Actualizar estado local
@@ -107,7 +123,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {value.map((image, index) => (
             <div
-              key={image.publicId}
+              key={image.publicId || image.url}
               className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
             >
               <Image
@@ -177,6 +193,8 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
           />
         </div>
       )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }

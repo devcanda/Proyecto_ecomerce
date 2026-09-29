@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/layout/Logo"
+import { ThemeToggle } from "@/components/layout/ThemeToggle"
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -58,14 +59,15 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      {/* Back to Store */}
-      <div className="border-t p-4">
-        <Button asChild variant="outline" className="w-full justify-start">
+      {/* Back to Store y modo claro/oscuro */}
+      <div className="flex items-center gap-2 border-t p-4">
+        <Button asChild variant="outline" className="flex-1 justify-start">
           <Link href="/">
             <Store className="mr-2 h-4 w-4" />
             Volver a la Tienda
           </Link>
         </Button>
+        <ThemeToggle />
       </div>
     </aside>
   )

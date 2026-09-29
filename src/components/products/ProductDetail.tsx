@@ -143,12 +143,18 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
+          {/* Favoritos - celular (junto a la cantidad para que los botones quepan) */}
+          <Button variant="outline" size="icon" className="ml-auto h-9 w-9 sm:hidden">
+            <Heart className="h-4 w-4" />
+            <span className="sr-only">Agregar a favoritos</span>
+          </Button>
         </div>
 
-        {/* Add to Cart */}
-        <div className="flex flex-1 gap-2">
+        {/* Add to Cart y Comprar ahora en la misma linea */}
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <Button
-            className="flex-1"
+            // Mismos colores que en el index: azul para agregar, naranja para comprar
+            className="min-w-0 bg-brand-blue/85 px-2 text-[13px] font-bold text-white hover:bg-brand-blue sm:w-48 sm:px-4 sm:text-sm"
             size="lg"
             disabled={product.stock === 0 || added}
             onClick={handleAddToCart}
@@ -160,27 +166,26 @@ export function ProductDetail({ product }: ProductDetailProps) {
               </>
             ) : (
               <>
-                <ShoppingCart className="mr-2 h-4 w-4" />
+                <ShoppingCart className="mr-0.5 h-4 w-4 sm:mr-2" />
                 Agregar al Carrito
               </>
             )}
           </Button>
-          <Button variant="outline" size="lg">
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={product.stock === 0}
+            className="flex h-10 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-brand/85 px-2 text-[13px] font-bold text-brand-foreground transition-colors hover:bg-brand-hover/85 disabled:pointer-events-none disabled:opacity-50 sm:w-48 sm:gap-2 sm:px-4 sm:text-sm"
+          >
+            <Zap className="h-4 w-4" />
+            Comprar ahora
+          </button>
+          <Button variant="outline" size="lg" className="hidden sm:inline-flex">
             <Heart className="h-4 w-4" />
+            <span className="sr-only">Agregar a favoritos</span>
           </Button>
         </div>
       </div>
-
-      {/* Comprar ahora */}
-      <button
-        type="button"
-        onClick={handleBuyNow}
-        disabled={product.stock === 0}
-        className="-mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-brand-blue/85 px-6 text-sm font-bold text-white transition-colors hover:bg-brand-blue disabled:pointer-events-none disabled:opacity-50"
-      >
-        <Zap className="h-4 w-4" />
-        Comprar ahora
-      </button>
 
       <Separator />
 

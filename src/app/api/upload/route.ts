@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cloudinary } from "@/lib/cloudinary"
+import { requireAdmin } from "@/lib/admin-guard"
+import {
+  deleteLocalImage,
+  isCloudinaryConfigured,
+  LOCAL_PREFIX,
+  saveLocalImage,
+} from "@/lib/local-storage"
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File | null
@@ -34,6 +44,11 @@ export async function POST(request: NextRequest) {
     // Convertir a buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
+    // Sin cuenta de Cloudinary configurada, la imagen se guarda en el propio servidor
+    if (!isCloudinaryConfigured()) {
+      return NextResponse.json(await saveLocalImage(buffer))
+    }
 
     // Subir a Cloudinary
     const result = await new Promise<{ secure_url: string; public_id: string }>(
@@ -72,6 +87,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const { searchParams } = new URL(request.url)
     const publicId = searchParams.get("publicId")
@@ -83,7 +101,11 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await cloudinary.uploader.destroy(publicId)
+    if (publicId.startsWith(LOCAL_PREFIX)) {
+      await deleteLocalImage(publicId)
+    } else {
+      await cloudinary.uploader.destroy(publicId)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

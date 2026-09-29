@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
+import { requireAdmin } from "@/lib/admin-guard"
+import { slugify } from "@/lib/slug"
 
 type Params = Promise<{ id: string }>
 
@@ -44,6 +46,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Params }
 ) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -52,7 +57,12 @@ export async function PUT(
       where: { id },
       data: {
         name: body.name,
-        slug: body.slug,
+        slug:
+          typeof body.slug === "string" && body.slug.trim()
+            ? body.slug.trim()
+            : body.name
+              ? slugify(String(body.name))
+              : undefined,
         description: body.description,
         price: body.price,
         comparePrice: body.comparePrice,
@@ -64,6 +74,8 @@ export async function PUT(
         isActive: body.isActive,
         categoryId: body.categoryId,
         brandId: body.brandId,
+        // undefined = no cambia; null = quitar el modelo
+        modelId: body.modelId === undefined ? undefined : body.modelId || null,
       },
       include: {
         category: true,
@@ -85,6 +97,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Params }
 ) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const { id } = await params
 
