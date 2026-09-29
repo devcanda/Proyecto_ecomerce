@@ -84,7 +84,7 @@ export function HeroBanner() {
                   </h1>
                   <Link
                     href={slide.href}
-                    className="mt-8 inline-flex w-fit items-center rounded-lg bg-brand px-8 py-3.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
+                    className="mt-8 inline-flex w-fit items-center rounded-lg bg-brand/85 px-8 py-3.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover/85"
                   >
                     {slide.cta}
                   </Link>

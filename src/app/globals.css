@@ -8,7 +8,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-plus-jakarta);
   --font-jakarta: var(--font-plus-jakarta);
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
@@ -17,6 +17,8 @@
   --color-brand-link: var(--brand-link);
   --color-brand-dark: var(--brand-dark);
   --color-cream: var(--cream);
+  --color-footer: var(--footer);
+  --color-footer-foreground: var(--footer-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -57,12 +59,15 @@
 
 :root {
   --radius: 0.625rem;
+  /* Footer: negro en modo claro */
+  --footer: oklch(0 0 0);
+  --footer-foreground: oklch(1 0 0);
   /* Colores de marca (logo Compra En Linea) */
-  --brand: oklch(0.691 0.189 47.8); /* naranja de marca #F56E00 (logo: #FF8008) */
-  --brand-hover: oklch(0.658 0.184 46.3); /* #E86400 */
-  --brand-foreground: oklch(0.285 0.045 222.1); /* texto sobre naranja: azul noche (5.6:1) */
-  --brand-blue: oklch(0.672 0.117 212.5); /* azul del logo #00A8C0 */
-  --brand-link: oklch(0.526 0.092 212.8); /* azul profundo para texto #00788A (5.2:1) */
+  --brand: oklch(0.702 0.178 51.8); /* naranja corporativo #F2780C */
+  --brand-hover: oklch(0.654 0.172 49.3); /* naranja corporativo oscuro #E0690A */
+  --brand-foreground: oklch(1 0 0); /* texto sobre naranja: blanco */
+  --brand-blue: oklch(0.684 0.117 207.9); /* azul corporativo #04ADBF */
+  --brand-link: oklch(0.543 0.093 207.5); /* azul corporativo profundo para texto #037E8B (4.8:1) */
   --brand-dark: oklch(0.285 0.045 222.1); /* azul noche #0B2F3A: footer, barra superior */
   --cream: oklch(0.977 0.016 70.5); /* blanco calido #FFF6EC */
   --background: oklch(1 0 0);
@@ -99,7 +104,10 @@
 }
 
 .dark {
-  --brand-link: oklch(0.767 0.118 207.7); /* azul claro legible sobre fondo oscuro #3CC8DA */
+  /* Footer: blanco en modo oscuro */
+  --footer: oklch(1 0 0);
+  --footer-foreground: oklch(0 0 0);
+  --brand-link: oklch(0.772 0.117 204.9); /* azul corporativo claro sobre fondo oscuro #3FCAD8 */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -140,10 +148,13 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Titulos con Fraunces: terminaciones suaves y tamano optico automatico */
+  /* Titulos: Plus Jakarta Sans */
+  h1,
+  h2 {
+    font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  }
   .font-display {
-    font-weight: 600;
-    font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 100;
+    font-weight: 700;
+    letter-spacing: -0.025em;
   }
 }

@@ -4,9 +4,8 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { Search, ShoppingCart, Heart, User, LogOut, Settings, Package, ChevronDown, X } from "lucide-react"
+import { Search, Heart, User, LogOut, Settings, Package, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +19,7 @@ import { MobileNav } from "./MobileNav"
 import { Logo } from "./Logo"
 import { MainNav } from "./MainNav"
 import { SearchBar } from "./SearchBar"
-import { useCartStore } from "@/stores/cart-store"
+import { CartPopover } from "./CartPopover"
 import { cn } from "@/lib/utils"
 
 export function Header() {
@@ -28,7 +27,6 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
   // Panel de busqueda para escritorio mediano (donde solo se ve el icono)
   const [searchOpen, setSearchOpen] = useState(false)
-  const itemCount = useCartStore((state) => state.getItemCount())
   const { data: session, status } = useSession()
   const pathname = usePathname()
 
@@ -118,20 +116,7 @@ export function Header() {
               <span className="sr-only">Favoritos</span>
             </Button>
 
-            <Link href="/cart">
-              <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                <ShoppingCart className="h-4 w-4" />
-                {mounted && itemCount > 0 && (
-                  <Badge
-                    className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-                    variant="destructive"
-                  >
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Carrito</span>
-              </Button>
-            </Link>
+            <CartPopover />
 
             {/* Auth Section */}
             {mounted && status !== "loading" && (

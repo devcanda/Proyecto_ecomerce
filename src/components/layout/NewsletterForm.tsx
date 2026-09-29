@@ -32,26 +32,26 @@ export function NewsletterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-3 max-w-sm">
-      <div className="flex items-center gap-2 rounded-md border border-white/15 bg-white/5 p-1.5 pl-3">
-        <Mail className="h-4 w-4 shrink-0 text-white/50" />
+      <div className="flex items-center gap-2 rounded-md border border-footer-foreground/15 bg-footer-foreground/5 p-1.5 pl-3">
+        <Mail className="h-4 w-4 shrink-0 text-footer-foreground/50" />
         <input
           type="email"
           placeholder="Ingresa tu email"
           {...register("email")}
-          className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm text-footer-foreground placeholder:text-footer-foreground/40 focus:outline-none"
         />
         <button
           type="submit"
-          className="rounded bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
+          className="rounded bg-brand/85 px-4 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-hover/85"
         >
           Suscribirme
         </button>
       </div>
       {errors.email && (
-        <p className="mt-2 text-xs text-red-300">{errors.email.message}</p>
+        <p className="mt-2 text-xs text-red-400 dark:text-red-600">{errors.email.message}</p>
       )}
       {subscribed && !errors.email && (
-        <p className="mt-2 text-xs text-white/70">¡Gracias por suscribirte!</p>
+        <p className="mt-2 text-xs text-footer-foreground/70">¡Gracias por suscribirte!</p>
       )}
     </form>
   )

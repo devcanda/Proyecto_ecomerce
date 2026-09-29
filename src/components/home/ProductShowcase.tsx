@@ -25,7 +25,7 @@ export function ProductShowcase({ title, subtitle, products, moreHref, titleFont
     <section className="container mx-auto px-4 pt-16 sm:pt-24">
       <SectionHeading title={title} subtitle={subtitle} font={titleFont} />
 
-      <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-4">
         {products.length === 0
           ? Array.from({ length: PER_ROW * MAX_ROWS }).map((_, i) => (
               <div key={i} className="space-y-3">

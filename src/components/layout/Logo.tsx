@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils"
 interface LogoProps {
   // "auto": texto negro en tema claro y blanco en tema oscuro
   // "light": siempre texto blanco (para fondos oscuros)
-  variant?: "auto" | "light"
+  // "inverse": texto blanco en tema claro y negro en tema oscuro (fondos que invierten el tema)
+  variant?: "auto" | "light" | "inverse"
   className?: string
   priority?: boolean
 }
@@ -29,10 +30,12 @@ export function Logo({ variant = "auto", className, priority }: LogoProps) {
     )
   }
 
+  const inverse = variant === "inverse"
+
   return (
     <>
       <Image
-        src="/logo.png"
+        src={inverse ? "/logo-light.png" : "/logo.png"}
         alt="Compra En Linea"
         width={WIDTH}
         height={HEIGHT}
@@ -40,7 +43,7 @@ export function Logo({ variant = "auto", className, priority }: LogoProps) {
         className={cn(imageClass, "dark:hidden")}
       />
       <Image
-        src="/logo-light.png"
+        src={inverse ? "/logo.png" : "/logo-light.png"}
         alt="Compra En Linea"
         width={WIDTH}
         height={HEIGHT}
