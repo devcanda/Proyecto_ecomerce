@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { CartItem } from "@/types"
 import { Price } from "@/components/ui/price"
 import { formatPrice } from "@/lib/format"
+import { cartItemKey, cartItemPrice, variantText } from "@/stores/cart-store"
 
 interface OrderSummaryProps {
   items: CartItem[]
@@ -12,7 +13,7 @@ interface OrderSummaryProps {
 
 export function OrderSummary({ items }: OrderSummaryProps) {
   const subtotal = items.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + cartItemPrice(item) * item.quantity,
     0
   )
   const shipping = subtotal >= 200 ? 0 : 15
@@ -26,7 +27,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
       {/* Items */}
       <div className="mt-4 space-y-3">
         {items.map((item) => (
-          <div key={item.product.id} className="flex gap-3">
+          <div key={cartItemKey(item)} className="flex gap-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
                 src={item.product.images[0]}
@@ -41,10 +42,12 @@ export function OrderSummary({ items }: OrderSummaryProps) {
             </div>
             <div className="flex flex-1 flex-col">
               <p className="text-sm font-medium line-clamp-2">{item.product.name}</p>
-              <p className="text-xs text-muted-foreground">{item.product.brand}</p>
+              <p className="text-xs text-muted-foreground">
+                {[item.product.brand, variantText(item.variant)].filter(Boolean).join(" · ")}
+              </p>
             </div>
             <p className="text-sm font-medium">
-              <Price amount={item.product.price * item.quantity} />
+              <Price amount={cartItemPrice(item) * item.quantity} />
             </p>
           </div>
         ))}

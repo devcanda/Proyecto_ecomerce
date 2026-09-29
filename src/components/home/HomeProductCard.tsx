@@ -23,13 +23,24 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
   const outOfStock = product.stock === 0
   const productImage = product.images?.[0] || PLACEHOLDER_IMAGE
 
+  // Productos con tallas/colores: se elige la talla en la pagina del producto
+  const needsOptions = Boolean(product.variants?.length)
+
   const handleAddToCart = () => {
+    if (needsOptions) {
+      router.push(`/productos/${product.slug}`)
+      return
+    }
     addItem(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }
 
   const handleBuyNow = () => {
+    if (needsOptions) {
+      router.push(`/productos/${product.slug}`)
+      return
+    }
     addItem(product)
     router.push("/cart")
   }
@@ -78,6 +89,8 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
             "Agotado"
           ) : added ? (
             "Agregado"
+          ) : needsOptions ? (
+            "Elegir talla"
           ) : (
             <>
               <span className="group-hover/add:hidden group-focus-visible/add:hidden">Agregar</span>

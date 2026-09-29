@@ -6,15 +6,19 @@ import { Minus, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CartItem as CartItemType } from "@/types"
 import { Price } from "@/components/ui/price"
+import { cartItemKey, cartItemPrice, cartItemStock, variantText } from "@/stores/cart-store"
 
 interface CartItemProps {
   item: CartItemType
-  onUpdateQuantity: (productId: string, quantity: number) => void
-  onRemove: (productId: string) => void
+  onUpdateQuantity: (key: string, quantity: number) => void
+  onRemove: (key: string) => void
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
   const { product, quantity } = item
+  const key = cartItemKey(item)
+  const price = cartItemPrice(item)
+  const label = variantText(item.variant)
 
   return (
     <div className="flex gap-4 py-4">
@@ -35,17 +39,18 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           <div>
             <p className="text-xs text-muted-foreground">{product.brand}</p>
             <Link
-              href={`/productos/${product.id}`}
+              href={`/productos/${product.slug}`}
               className="font-medium hover:text-brand-link transition-colors line-clamp-2"
             >
               {product.name}
             </Link>
+            {label && <p className="mt-0.5 text-sm text-muted-foreground">{label}</p>}
           </div>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={() => onRemove(product.id)}
+            onClick={() => onRemove(key)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -58,7 +63,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-r-none"
-              onClick={() => onUpdateQuantity(product.id, quantity - 1)}
+              onClick={() => onUpdateQuantity(key, quantity - 1)}
               disabled={quantity <= 1}
             >
               <Minus className="h-3 w-3" />
@@ -68,8 +73,8 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-l-none"
-              onClick={() => onUpdateQuantity(product.id, quantity + 1)}
-              disabled={quantity >= product.stock}
+              onClick={() => onUpdateQuantity(key, quantity + 1)}
+              disabled={quantity >= cartItemStock(item)}
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -78,11 +83,11 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           {/* Price */}
           <div className="text-right">
             <p className="font-semibold">
-              <Price amount={product.price * quantity} />
+              <Price amount={price * quantity} />
             </p>
             {quantity > 1 && (
               <p className="text-xs text-muted-foreground">
-                <Price amount={product.price} /> c/u
+                <Price amount={price} /> c/u
               </p>
             )}
           </div>

@@ -7,6 +7,8 @@ const STRIPE_CURRENCY = CURRENCY.toLowerCase()
 
 interface CartItem {
   id: string
+  // Talla/color elegidos (productos con variantes)
+  variantId?: string
   name: string
   price: number
   quantity: number
@@ -133,7 +135,9 @@ export async function POST(request: NextRequest) {
       metadata: {
         ...metadata,
         userId: session.user.id,
-        items: JSON.stringify(items.map((i) => ({ id: i.id, qty: i.quantity }))),
+        items: JSON.stringify(
+          items.map((i) => (i.variantId ? { id: i.id, v: i.variantId, qty: i.quantity } : { id: i.id, qty: i.quantity }))
+        ),
       },
       shipping_options: shippingOptions,
       billing_address_collection: "required",

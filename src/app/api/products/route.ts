@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { slugify } from "@/lib/slug"
-import { transformProduct } from "@/lib/transformers"
+import { productInclude, transformProduct } from "@/lib/transformers"
+import { requireAdmin } from "@/lib/admin-guard"
+import { parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
 import { searchProducts } from "@/lib/search"
 
 export async function GET(request: NextRequest) {
@@ -79,10 +81,7 @@ export async function GET(request: NextRequest) {
     let products = await prisma.product.findMany({
       where,
       orderBy,
-      include: {
-        category: true,
-        brand: true,
-      },
+      include: productInclude,
       // La paginacion por relevancia se aplica despues de ordenar por puntaje
       take: sortByRelevance ? undefined : take,
       skip: sortByRelevance ? undefined : skip,
@@ -107,16 +106,17 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error fetching products:", error)
-    return NextResponse.json(
-      { error: "Error fetching products" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error fetching products" }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const body = await request.json()
+    const variants = parseVariants(body.variants)
 
     // Si no llega el slug se genera a partir del nombre
     const slug =
@@ -124,34 +124,35 @@ export async function POST(request: NextRequest) {
         ? body.slug.trim()
         : slugify(String(body.name ?? ""))
 
-    const product = await prisma.product.create({
-      data: {
-        name: body.name,
-        slug,
-        description: body.description,
-        price: body.price,
-        comparePrice: body.comparePrice,
-        stock: body.stock || 0,
-        images: body.images || [],
-        specs: body.specs || {},
-        isNew: body.isNew || false,
-        isFeatured: body.isFeatured || false,
-        categoryId: body.categoryId,
-        brandId: body.brandId,
-        modelId: body.modelId || null,
-      },
-      include: {
-        category: true,
-        brand: true,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
+        data: {
+          name: body.name,
+          slug,
+          description: body.description,
+          price: body.price,
+          comparePrice: body.comparePrice,
+          // Con tallas/colores el stock del producto es la suma de sus variantes
+          stock: variants.length ? totalVariantStock(variants) : body.stock || 0,
+          images: body.images || [],
+          specs: body.specs || {},
+          isNew: body.isNew || false,
+          isFeatured: body.isFeatured || false,
+          categoryId: body.categoryId,
+          brandId: body.brandId,
+          modelId: body.modelId || null,
+        },
+      })
+      if (variants.length) await syncVariants(tx, created.id, variants)
+      return tx.product.findUniqueOrThrow({
+        where: { id: created.id },
+        include: productInclude,
+      })
     })
 
     return NextResponse.json(transformProduct(product), { status: 201 })
   } catch (error) {
     console.error("Error creating product:", error)
-    return NextResponse.json(
-      { error: "Error creating product" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error creating product" }, { status: 500 })
   }
 }

@@ -10,6 +10,7 @@ import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
 import { Price } from "@/components/ui/price"
 import { formatPrice } from "@/lib/format"
+import { VariantPicker } from "./VariantPicker"
 
 interface ProductDetailProps {
   product: Product
@@ -21,28 +22,83 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const addItem = useCartStore((state) => state.addItem)
   const router = useRouter()
 
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price
+  // Tallas y colores
+  const variants = product.variants ?? []
+  const hasVariants = variants.length > 0
+  const needsSize = variants.some((variant) => variant.size)
+  const needsColor = variants.some((variant) => variant.color)
+  const onlyColor = needsColor ? [...new Set(variants.map((variant) => variant.color))] : []
+  const [selectedSize, setSelectedSize] = useState<string | undefined>()
+  // Si solo hay un color se deja elegido
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(
+    onlyColor.length === 1 ? onlyColor[0] : undefined
+  )
+  const [selectionError, setSelectionError] = useState<string | null>(null)
+
+  const selectedVariant = hasVariants
+    ? variants.find(
+        (variant) =>
+          (!needsSize || variant.size === selectedSize) && (!needsColor || variant.color === selectedColor)
+      )
+    : undefined
+
+  // Precio: el de la talla elegida; si aun no se elige y los precios cambian, se muestra "Desde"
+  const variantPrices = variants.map((variant) => variant.price)
+  const minPrice = hasVariants ? Math.min(...variantPrices) : product.price
+  const pricesVary = hasVariants && new Set(variantPrices).size > 1
+  const displayPrice = selectedVariant?.price ?? minPrice
+  const availableStock = selectedVariant ? selectedVariant.stock : product.stock
+
+  const hasDiscount = product.originalPrice && product.originalPrice > displayPrice
   const discountPercent = hasDiscount
-    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+    ? Math.round(((product.originalPrice! - displayPrice) / product.originalPrice!) * 100)
     : 0
+
+  const handleSelectSize = (size: string) => {
+    setSelectedSize(size)
+    setSelectionError(null)
+    setQuantity(1)
+  }
+
+  const handleSelectColor = (color: string) => {
+    setSelectedColor(color)
+    setSelectionError(null)
+    setQuantity(1)
+    // Si la talla elegida no existe en ese color, se limpia
+    if (selectedSize && !variants.some((variant) => variant.color === color && variant.size === selectedSize && variant.stock > 0)) {
+      setSelectedSize(undefined)
+    }
+  }
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1)
   }
 
   const increaseQuantity = () => {
-    if (quantity < product.stock) setQuantity(quantity + 1)
+    if (quantity < availableStock) setQuantity(quantity + 1)
+  }
+
+  // Con tallas/colores hay que elegir antes de agregar
+  const ensureSelection = () => {
+    if (!hasVariants) return true
+    if (selectedVariant) return true
+    setSelectionError(
+      needsSize && !selectedSize ? "Elige una talla para continuar" : "Elige un color para continuar"
+    )
+    return false
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity)
+    if (!ensureSelection()) return
+    addItem(product, quantity, selectedVariant)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
 
   // Compra directa: agrega la cantidad elegida y lleva al carrito para finalizar
   const handleBuyNow = () => {
-    addItem(product, quantity)
+    if (!ensureSelection()) return
+    addItem(product, quantity, selectedVariant)
     router.push("/cart")
   }
 
@@ -86,8 +142,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
       {/* Price */}
       <div className="flex items-baseline gap-3">
+        {pricesVary && !selectedVariant && (
+          <span className="text-sm font-medium text-muted-foreground">Desde</span>
+        )}
         <span className="text-3xl font-bold">
-          <Price amount={product.price} />
+          <Price amount={displayPrice} />
         </span>
         {hasDiscount && (
           <span className="text-lg text-muted-foreground line-through">
@@ -98,9 +157,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
       {/* Stock */}
       <p className="text-sm">
-        {product.stock > 0 ? (
+        {availableStock > 0 ? (
           <span className="text-green-600 dark:text-green-400">
-            {product.stock} unidades disponibles
+            {availableStock} {availableStock === 1 ? "unidad disponible" : "unidades disponibles"}
+            {selectedVariant?.size && ` en talla ${selectedVariant.size}`}
           </span>
         ) : (
           <span className="text-destructive">Agotado</span>
@@ -116,6 +176,20 @@ export function ProductDetail({ product }: ProductDetailProps) {
       </div>
 
       <Separator />
+
+      {hasVariants && (
+        <VariantPicker
+          variants={variants}
+          variantType={product.variantType}
+          brand={product.brand}
+          sizeGuide={product.sizeGuide}
+          selectedSize={selectedSize}
+          selectedColor={selectedColor}
+          onSelectSize={handleSelectSize}
+          onSelectColor={handleSelectColor}
+          error={selectionError}
+        />
+      )}
 
       {/* Quantity & Add to Cart */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -138,7 +212,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               size="icon"
               className="h-9 w-9 rounded-l-none"
               onClick={increaseQuantity}
-              disabled={quantity >= product.stock}
+              disabled={quantity >= availableStock}
             >
               <Plus className="h-4 w-4" />
             </Button>

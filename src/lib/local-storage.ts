@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
+import { IMAGE_MAX_STORED_PX } from "@/lib/image-quality"
 
 // Imagenes guardadas en el propio servidor cuando Cloudinary no esta configurado.
 // Se guardan fuera de /public para que se sirvan tambien en produccion (ver app/uploads/[...path]).
@@ -23,7 +24,7 @@ export function resolveUploadPath(relativePath: string) {
   return fullPath
 }
 
-// Optimiza la imagen (max 1200px, WebP) igual que la configuracion usada en Cloudinary
+// Optimiza la imagen (max 2000px, WebP) igual que la configuracion usada en Cloudinary
 export async function saveLocalImage(buffer: Buffer, folder = "products") {
   const fileName = `${randomUUID()}.webp`
   const relativePath = `${folder}/${fileName}`
@@ -33,7 +34,7 @@ export async function saveLocalImage(buffer: Buffer, folder = "products") {
   await mkdir(path.dirname(fullPath), { recursive: true })
   const optimized = await sharp(buffer)
     .rotate()
-    .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+    .resize(IMAGE_MAX_STORED_PX, IMAGE_MAX_STORED_PX, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: 82 })
     .toBuffer()
   await writeFile(fullPath, optimized)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cloudinary } from "@/lib/cloudinary"
 import { requireAdmin } from "@/lib/admin-guard"
+import { IMAGE_MAX_STORED_PX } from "@/lib/image-quality"
 import {
   deleteLocalImage,
   isCloudinaryConfigured,
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
               folder: "basictech/products",
               resource_type: "image",
               transformation: [
-                { width: 1200, height: 1200, crop: "limit" },
+                { width: IMAGE_MAX_STORED_PX, height: IMAGE_MAX_STORED_PX, crop: "limit" },
                 { quality: "auto" },
                 { fetch_format: "auto" },
               ],

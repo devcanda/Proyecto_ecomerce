@@ -6,6 +6,7 @@ import { CartItem } from "@/types"
 import { StripeCheckoutButton } from "./StripeCheckoutButton"
 import { Price } from "@/components/ui/price"
 import { formatPrice } from "@/lib/format"
+import { cartItemPrice } from "@/stores/cart-store"
 
 interface CartSummaryProps {
   items: CartItem[]
@@ -13,7 +14,7 @@ interface CartSummaryProps {
 
 export function CartSummary({ items }: CartSummaryProps) {
   const subtotal = items.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + cartItemPrice(item) * item.quantity,
     0
   )
   const shipping = subtotal >= 200 ? 0 : 15

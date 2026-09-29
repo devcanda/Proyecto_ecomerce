@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Price } from "@/components/ui/price"
-import { useCartStore } from "@/stores/cart-store"
+import { cartItemKey, cartItemPrice, useCartStore, variantText } from "@/stores/cart-store"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1629429408209-1f912961dbd8?w=100&h=100&fit=crop"
 
@@ -67,8 +67,11 @@ export function CartPopover() {
         ) : (
           <>
             <ul className="max-h-80 divide-y overflow-y-auto">
-              {items.map(({ product, quantity }) => (
-                <li key={product.id}>
+              {items.map((item) => {
+                const { product, quantity } = item
+                const label = variantText(item.variant)
+                return (
+                <li key={cartItemKey(item)}>
                   <Link
                     href={`/productos/${product.slug}`}
                     onClick={close}
@@ -86,15 +89,16 @@ export function CartPopover() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{product.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Cantidad: {quantity}
+                        {label ? `${label} · ` : ""}Cantidad: {quantity}
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-semibold">
-                      <Price amount={product.price * quantity} />
+                      <Price amount={cartItemPrice(item) * quantity} />
                     </span>
                   </Link>
                 </li>
-              ))}
+                )
+              })}
             </ul>
 
             <div className="space-y-3 border-t px-4 py-3">

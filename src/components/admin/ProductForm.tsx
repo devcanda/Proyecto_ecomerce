@@ -17,6 +17,11 @@ import { ImageUpload } from "@/components/admin/ImageUpload"
 import { PriceInput } from "@/components/admin/PriceInput"
 import { SearchableSelect, SelectOption } from "@/components/admin/SearchableSelect"
 import { slugify } from "@/lib/slug"
+import { VariantRow, VariantsEditor } from "@/components/admin/VariantsEditor"
+import { SizeGuideField } from "@/components/admin/SizeGuideField"
+import { VARIANT_TYPES } from "@/lib/category-type"
+import type { VariantType } from "@/types"
+import { cn } from "@/lib/utils"
 
 // Bordes mas marcados en modo claro para distinguir bien los campos del formulario
 const FIELD_CLASS = "border-neutral-300 dark:border-input"
@@ -61,6 +66,7 @@ export interface EditableProduct {
   categoryId: string
   brandId: string
   modelId?: string
+  variants?: VariantRow[]
 }
 
 interface ProductFormProps {
@@ -72,12 +78,14 @@ interface Category {
   id: string
   name: string
   slug: string
+  variantType?: VariantType
 }
 
 interface Brand {
   id: string
   name: string
   slug: string
+  sizeGuide?: string
 }
 
 interface ProductModel {
@@ -113,6 +121,8 @@ export function ProductForm({ product }: ProductFormProps) {
     () => product?.images.map((url) => ({ url, publicId: "" })) ?? []
   )
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [variants, setVariants] = useState<VariantRow[]>(() => product?.variants ?? [])
+  const [typeSaving, setTypeSaving] = useState(false)
   const [models, setModels] = useState<ProductModel[]>([])
 
   const {
@@ -175,15 +185,43 @@ export function ProductForm({ product }: ProductFormProps) {
   }
 
   const handleCreateCategory = async (name: string) => {
-    const option = await createOption("/api/categories", { name })
-    if (option) {
-      setCategories((items) =>
-        items.some((item) => item.id === option.value)
-          ? items
-          : [...items, { id: option.value, name: option.label, slug: "" }].sort((a, b) => a.name.localeCompare(b.name))
-      )
+    const response = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+    if (!response.ok) return null
+    const created: Category = await response.json()
+    setCategories((items) =>
+      items.some((item) => item.id === created.id)
+        ? items
+        : [...items, created].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    return { value: created.id, label: created.name }
+  }
+
+  // El tipo es de la categoria: cambiarlo afecta a todos sus productos
+  const handleCategoryType = async (variantType: VariantType) => {
+    if (!categoryId) return
+    setTypeSaving(true)
+    try {
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantType }),
+      })
+      if (response.ok) {
+        setCategories((items) =>
+          items.map((item) => (item.id === categoryId ? { ...item, variantType } : item))
+        )
+      }
+    } finally {
+      setTypeSaving(false)
     }
-    return option
+  }
+
+  const handleSizeGuideChange = (sizeGuide: string | undefined) => {
+    setBrands((items) => items.map((item) => (item.id === brandId ? { ...item, sizeGuide } : item)))
   }
 
   const handleCreateBrand = async (name: string) => {
@@ -234,9 +272,20 @@ export function ProductForm({ product }: ProductFormProps) {
     fetchData()
   }, [])
 
+  const selectedCategory = categories.find((item) => item.id === categoryId)
+  const selectedBrand = brands.find((item) => item.id === brandId)
+  const variantType: VariantType = selectedCategory?.variantType ?? "NONE"
+  const hasVariantFields = variantType !== "NONE"
+  const variantStock = variants.reduce((total, row) => total + (row.stock || 0), 0)
+  const basePrice = watch("price")
+
   const onSubmit = async (data: ProductFormData) => {
     if (images.length === 0) {
       alert("Debes subir al menos una imagen")
+      return
+    }
+    if (hasVariantFields && variants.length === 0) {
+      setSaveError('Elige al menos una talla en la seccion "Tallas y colores".')
       return
     }
 
@@ -253,6 +302,9 @@ export function ProductForm({ product }: ProductFormProps) {
           comparePrice: data.comparePrice ?? null,
           modelId: data.modelId ?? null,
           images: images.map((img) => img.url),
+          // Si la categoria no usa tallas se envia vacio para quitar variantes anteriores
+          variants: hasVariantFields ? variants : [],
+          stock: hasVariantFields ? variantStock : data.stock,
         }),
       })
 
@@ -365,6 +417,34 @@ export function ProductForm({ product }: ProductFormProps) {
                 {errors.categoryId && (
                   <p className="text-sm text-destructive">{errors.categoryId.message}</p>
                 )}
+                {selectedCategory && (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      Tipo de categoria {typeSaving && <Loader2 className="inline h-3 w-3 animate-spin" />}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Tipo de categoria">
+                      {VARIANT_TYPES.map((type) => (
+                        <button
+                          key={type.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={variantType === type.value}
+                          title={type.hint}
+                          disabled={typeSaving}
+                          onClick={() => handleCategoryType(type.value)}
+                          className={cn(
+                            "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                            variantType === type.value
+                              ? "border-brand-blue bg-brand-blue/10 text-brand-link"
+                              : "border-neutral-300 text-muted-foreground hover:border-brand-blue/60 dark:border-input"
+                          )}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="brandId">Marca</Label>
@@ -452,13 +532,20 @@ export function ProductForm({ product }: ProductFormProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="stock">Stock</Label>
-                <Input
-                  id="stock"
-                  className={FIELD_CLASS}
-                  type="number"
-                  placeholder="0"
-                  {...register("stock", { valueAsNumber: true })}
-                />
+                {hasVariantFields ? (
+                  <>
+                    <Input id="stock" className={FIELD_CLASS} value={variantStock} disabled readOnly />
+                    <p className="text-xs text-muted-foreground">Se calcula sumando el stock de cada talla.</p>
+                  </>
+                ) : (
+                  <Input
+                    id="stock"
+                    className={FIELD_CLASS}
+                    type="number"
+                    placeholder="0"
+                    {...register("stock", { valueAsNumber: true })}
+                  />
+                )}
                 {errors.stock && (
                   <p className="text-sm text-destructive">{errors.stock.message}</p>
                 )}
@@ -466,6 +553,41 @@ export function ProductForm({ product }: ProductFormProps) {
             </div>
           </CardContent>
         </Card>
+
+        {hasVariantFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Tallas y colores</CardTitle>
+              <CardDescription>
+                {variantType === "FOOTWEAR"
+                  ? "Tallas de calzado disponibles, con su stock y precio si cambia"
+                  : "Tallas de ropa disponibles, con su stock y precio si cambia"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <VariantsEditor
+                variantType={variantType}
+                value={variants}
+                onChange={setVariants}
+                basePrice={basePrice}
+                fieldClassName={FIELD_CLASS}
+              />
+              {selectedBrand ? (
+                <SizeGuideField
+                  key={selectedBrand.id}
+                  brandId={selectedBrand.id}
+                  brandName={selectedBrand.name}
+                  value={selectedBrand.sizeGuide}
+                  onChange={handleSizeGuideChange}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Elige la marca para poder subir su guía de tallas.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

@@ -5,17 +5,17 @@ import { ShoppingBag, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CartItem } from "@/components/cart/CartItem"
 import { CartSummary } from "@/components/cart/CartSummary"
-import { useCartStore } from "@/stores/cart-store"
+import { cartItemKey, useCartStore } from "@/stores/cart-store"
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem } = useCartStore()
 
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
-    updateQuantity(productId, quantity)
+  const handleUpdateQuantity = (key: string, quantity: number) => {
+    updateQuantity(key, quantity)
   }
 
-  const handleRemove = (productId: string) => {
-    removeItem(productId)
+  const handleRemove = (key: string) => {
+    removeItem(key)
   }
 
   if (items.length === 0) {
@@ -63,7 +63,7 @@ export default function CartPage() {
               <div className="divide-y">
                 {items.map((item) => (
                   <CartItem
-                    key={item.product.id}
+                    key={cartItemKey(item)}
                     item={item}
                     onUpdateQuantity={handleUpdateQuantity}
                     onRemove={handleRemove}

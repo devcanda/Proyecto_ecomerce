@@ -11,7 +11,10 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
 
   try {
     const { id } = await params
-    const product = await prisma.product.findUnique({ where: { id } })
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: { orderBy: { position: "asc" } } },
+    })
 
     if (!product) {
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
@@ -31,6 +34,13 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
       categoryId: product.categoryId,
       brandId: product.brandId,
       modelId: product.modelId ?? undefined,
+      variants: product.variants.map((variant) => ({
+        id: variant.id,
+        size: variant.size ?? "",
+        color: variant.color ?? "",
+        price: variant.price !== null ? Number(variant.price) : undefined,
+        stock: variant.stock,
+      })),
     })
   } catch (error) {
     console.error("Error fetching product for edit:", error)

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Heart, ShoppingCart, Star, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +19,7 @@ interface ProductCardProps {
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1629429408209-1f912961dbd8?w=400&h=400&fit=crop"
 
 export function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter()
   const addItem = useCartStore((state) => state.addItem)
   const [added, setAdded] = useState(false)
 
@@ -28,9 +30,16 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const productImage = product.images?.[0] || PLACEHOLDER_IMAGE
 
+  // Productos con tallas/colores: se elige la talla en la pagina del producto
+  const needsOptions = Boolean(product.variants?.length)
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (needsOptions) {
+      router.push(`/productos/${product.slug}`)
+      return
+    }
     addItem(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
@@ -89,7 +98,7 @@ export function ProductCard({ product }: ProductCardProps) {
             ) : (
               <>
                 <ShoppingCart className="mr-2 h-4 w-4" />
-                Agregar
+                {needsOptions ? "Elegir talla" : "Agregar"}
               </>
             )}
           </Button>

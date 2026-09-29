@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Loader2, CreditCard, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useCartStore } from "@/stores/cart-store"
+import { cartItemPrice, useCartStore, variantText } from "@/stores/cart-store"
 
 export function StripeCheckoutButton() {
   const [loading, setLoading] = useState(false)
@@ -29,8 +29,9 @@ export function StripeCheckoutButton() {
         body: JSON.stringify({
           items: items.map((item) => ({
             id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
+            variantId: item.variant?.id,
+            name: item.variant ? `${item.product.name} (${variantText(item.variant)})` : item.product.name,
+            price: cartItemPrice(item),
             quantity: item.quantity,
             image: item.product.images?.[0],
           })),
