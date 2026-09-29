@@ -60,7 +60,7 @@ export function MainNav({ transparent }: MainNavProps) {
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/products" className="cursor-pointer font-medium">
+            <Link href="/productos" className="cursor-pointer font-medium">
               Ver todos los productos
             </Link>
           </DropdownMenuItem>

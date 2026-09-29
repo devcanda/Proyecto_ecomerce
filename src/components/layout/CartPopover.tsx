@@ -59,7 +59,7 @@ export function CartPopover() {
             <ShoppingBag className="h-10 w-10 text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground">Tu carrito esta vacio</p>
             <Button asChild size="sm" variant="outline">
-              <Link href="/products" onClick={close}>
+              <Link href="/productos" onClick={close}>
                 Ver productos
               </Link>
             </Button>
@@ -70,7 +70,7 @@ export function CartPopover() {
               {items.map(({ product, quantity }) => (
                 <li key={product.id}>
                   <Link
-                    href={`/products/${product.slug}`}
+                    href={`/productos/${product.slug}`}
                     onClick={close}
                     className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent"
                   >

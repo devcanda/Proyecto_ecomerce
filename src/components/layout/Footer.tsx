@@ -5,12 +5,12 @@ import { Logo } from "./Logo"
 
 const footerLinks = {
   categorias: [
-    { name: "Computadoras", href: "/products?category=computadoras" },
-    { name: "Monitores", href: "/products?category=monitores" },
-    { name: "Teclados", href: "/products?category=teclados" },
-    { name: "Mouse", href: "/products?category=mouse" },
-    { name: "Audifonos", href: "/products?category=audifonos" },
-    { name: "Componentes", href: "/products?category=componentes" },
+    { name: "Computadoras", href: "/productos?category=computadoras" },
+    { name: "Monitores", href: "/productos?category=monitores" },
+    { name: "Teclados", href: "/productos?category=teclados" },
+    { name: "Mouse", href: "/productos?category=mouse" },
+    { name: "Audifonos", href: "/productos?category=audifonos" },
+    { name: "Componentes", href: "/productos?category=componentes" },
   ],
   legal: [
     { name: "Politica de Privacidad", href: "/privacy" },

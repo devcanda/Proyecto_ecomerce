@@ -88,7 +88,7 @@ export default function OrdersPage() {
               Aun no has realizado ningun pedido
             </p>
             <Button asChild>
-              <Link href="/products">Explorar Productos</Link>
+              <Link href="/productos">Explorar Productos</Link>
             </Button>
           </CardContent>
         </Card>

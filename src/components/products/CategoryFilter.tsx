@@ -40,13 +40,14 @@ export function CategoryFilter({
       </button>
 
       {isOpen && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2 space-y-2 pr-3">
           {categories.map((category) => (
             <div key={category.id} className="flex items-center space-x-2">
               <Checkbox
                 id={`category-${category.id}`}
                 checked={selectedCategories.includes(category.slug)}
                 onCheckedChange={() => handleCategoryToggle(category.slug)}
+                className="border-neutral-400 bg-white dark:border-input dark:bg-input/30"
               />
               <Label
                 htmlFor={`category-${category.id}`}

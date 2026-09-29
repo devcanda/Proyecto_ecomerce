@@ -35,7 +35,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           <div>
             <p className="text-xs text-muted-foreground">{product.brand}</p>
             <Link
-              href={`/products/${product.id}`}
+              href={`/productos/${product.id}`}
               className="font-medium hover:text-brand-link transition-colors line-clamp-2"
             >
               {product.name}

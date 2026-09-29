@@ -16,6 +16,7 @@ import { FilterSidebar } from "@/components/products/FilterSidebar"
 import { FilterMobile } from "@/components/products/FilterMobile"
 import { ProductGrid } from "@/components/products/ProductGrid"
 import { SortSelect } from "@/components/products/SortSelect"
+import { ProductSearch } from "@/components/products/ProductSearch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useProductsStore } from "@/stores/products-store"
 import { FilterState } from "@/types"
@@ -58,6 +59,10 @@ function ProductsContent() {
     setFilters(newFilters)
   }, [setFilters])
 
+  const handleSearch = useCallback((search: string) => {
+    setFilters({ search })
+  }, [setFilters])
+
   const activeFilterCount =
     filters.brands.length +
     filters.categories.length +
@@ -79,8 +84,8 @@ function ProductsContent() {
       </Breadcrumb>
 
       {/* Results count and controls */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">
             {filters.search ? `Resultados para "${filters.search}"` : "Todos los Productos"}
           </h1>
@@ -92,7 +97,8 @@ function ProductsContent() {
             </p>
             {filters.search && (
               <Link
-                href="/products"
+                href="/productos"
+                onClick={() => setFilters({ search: "" })}
                 className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
                 <X className="h-3 w-3" />
@@ -107,18 +113,25 @@ function ProductsContent() {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <FilterMobile
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            activeFilterCount={activeFilterCount}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:ml-10 lg:flex-1 lg:justify-between">
+          <ProductSearch
+            value={filters.search}
+            onSearch={handleSearch}
+            className="w-full sm:flex-1 lg:w-80 lg:flex-none xl:w-96"
           />
-          <SortSelect
-            value={filters.sortBy}
-            onChange={(sortBy) =>
-              setFilters({ sortBy: sortBy as FilterState["sortBy"] })
-            }
-          />
+          <div className="flex items-center gap-3">
+            <FilterMobile
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              activeFilterCount={activeFilterCount}
+            />
+            <SortSelect
+              value={filters.sortBy}
+              onChange={(sortBy) =>
+                setFilters({ sortBy: sortBy as FilterState["sortBy"] })
+              }
+            />
+          </div>
         </div>
       </div>
 
@@ -177,8 +190,11 @@ function ProductsPageSkeleton() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<ProductsPageSkeleton />}>
-      <ProductsContent />
-    </Suspense>
+    // Modo claro: fondo gris muy suave para que las tarjetas blancas resalten (como en modo oscuro)
+    <div className="bg-neutral-100 dark:bg-transparent">
+      <Suspense fallback={<ProductsPageSkeleton />}>
+        <ProductsContent />
+      </Suspense>
+    </div>
   )
 }

@@ -30,7 +30,7 @@ export default function CartPage() {
             Parece que aun no has agregado productos a tu carrito.
           </p>
           <Button asChild className="mt-6">
-            <Link href="/products">Explorar Productos</Link>
+            <Link href="/productos">Explorar Productos</Link>
           </Button>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function CartPage() {
           </p>
         </div>
         <Button variant="ghost" asChild className="hidden sm:flex">
-          <Link href="/products">
+          <Link href="/productos">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Seguir Comprando
           </Link>
@@ -75,7 +75,7 @@ export default function CartPage() {
 
           {/* Continue Shopping - Mobile */}
           <Button variant="outline" asChild className="mt-4 w-full sm:hidden">
-            <Link href="/products">
+            <Link href="/productos">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Seguir Comprando
             </Link>

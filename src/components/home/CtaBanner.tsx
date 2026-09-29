@@ -18,7 +18,7 @@ export function CtaBanner() {
             Arma El Setup De Tus Sueños Con Tecnología Que Te Acompaña.
           </h2>
           <Link
-            href="/products"
+            href="/productos"
             className="mt-8 rounded-md bg-brand/85 px-6 py-3 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-hover/85"
           >
             Comprar Ahora

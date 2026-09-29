@@ -104,7 +104,7 @@ export function MobileNav() {
 
           {/* All Products */}
           <Link
-            href="/products"
+            href="/productos"
             onClick={() => setOpen(false)}
             className="flex items-center justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >

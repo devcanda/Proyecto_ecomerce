@@ -16,7 +16,7 @@ interface SortSelectProps {
 export function SortSelect({ value, onChange }: SortSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[180px] border-neutral-300 bg-white dark:border-input">
         <SelectValue placeholder="Ordenar por" />
       </SelectTrigger>
       <SelectContent>

@@ -46,7 +46,7 @@ function SuccessContent() {
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full">
-              <Link href="/products">
+              <Link href="/productos">
                 Seguir comprando
               </Link>
             </Button>

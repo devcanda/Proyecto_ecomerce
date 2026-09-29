@@ -37,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Card className="group overflow-hidden transition-all hover:shadow-lg">
+    <Card className="group overflow-hidden border-black/[0.06] shadow-[0_1px_3px_rgb(0_0_0/0.06),0_6px_16px_rgb(0_0_0/0.06)] transition-all hover:shadow-[0_12px_28px_rgb(0_0_0/0.12)] dark:border-border dark:shadow-sm dark:hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden bg-muted">
         {/* Badges */}
         <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
@@ -60,7 +60,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </Button>
 
         {/* Image */}
-        <Link href={`/products/${product.slug}`}>
+        <Link href={`/productos/${product.slug}`}>
           <div className="relative h-full w-full">
             <Image
               src={productImage}
@@ -101,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="text-xs text-muted-foreground">{product.brand}</p>
 
         {/* Name */}
-        <Link href={`/products/${product.slug}`}>
+        <Link href={`/productos/${product.slug}`}>
           <h3 className="mt-1 font-medium leading-tight line-clamp-2 hover:text-brand-link transition-colors">
             {product.name}
           </h3>

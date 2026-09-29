@@ -51,17 +51,18 @@ export function BrandFilter({ selectedBrands, onBrandsChange }: BrandFilterProps
               placeholder="Buscar marca..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-9 text-sm"
+              className="pl-8 h-9 text-sm border-neutral-300 bg-white dark:border-input"
             />
           </div>
 
-          <div className="max-h-48 space-y-2 overflow-y-auto">
+          <div className="max-h-48 space-y-2 overflow-y-auto pr-3">
             {filteredBrands.map((brand) => (
               <div key={brand.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`brand-${brand.id}`}
                   checked={selectedBrands.includes(brand.name)}
                   onCheckedChange={() => handleBrandToggle(brand.name)}
+                  className="border-neutral-400 bg-white dark:border-input dark:bg-input/30"
                 />
                 <Label
                   htmlFor={`brand-${brand.id}`}

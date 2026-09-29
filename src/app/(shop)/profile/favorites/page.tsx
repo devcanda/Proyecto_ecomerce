@@ -26,7 +26,7 @@ export default function FavoritesPage() {
               Guarda productos que te gusten para verlos luego
             </p>
             <Button asChild>
-              <Link href="/products">Explorar Productos</Link>
+              <Link href="/productos">Explorar Productos</Link>
             </Button>
           </CardContent>
         </Card>

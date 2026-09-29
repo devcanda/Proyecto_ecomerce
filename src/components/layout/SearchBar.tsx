@@ -122,7 +122,7 @@ function SearchBarInner({
 
   const goToProduct = (product: Product) => {
     close()
-    router.push(`/products/${product.slug}`)
+    router.push(`/productos/${product.slug}`)
   }
 
   const onSubmit = ({ query }: SearchFormData) => {
@@ -131,7 +131,7 @@ function SearchBarInner({
       return
     }
     close()
-    router.push(`/products?search=${encodeURIComponent(query)}`)
+    router.push(`/productos?search=${encodeURIComponent(query)}`)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -220,7 +220,7 @@ function SearchBarInner({
                 {suggestions.map((product, index) => (
                   <li key={product.id}>
                     <Link
-                      href={`/products/${product.slug}`}
+                      href={`/productos/${product.slug}`}
                       onClick={close}
                       onMouseEnter={() => setActiveIndex(index)}
                       className={cn(
@@ -251,7 +251,7 @@ function SearchBarInner({
                 ))}
               </ul>
               <Link
-                href={`/products?search=${encodeURIComponent(term)}`}
+                href={`/productos?search=${encodeURIComponent(term)}`}
                 onClick={close}
                 className="flex items-center justify-center gap-2 border-t px-4 py-3 text-sm font-medium text-brand-link transition-colors hover:bg-accent"
               >

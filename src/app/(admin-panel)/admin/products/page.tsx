@@ -313,7 +313,7 @@ export default function AdminProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/products/${product.slug}`}>
+                              <Link href={`/productos/${product.slug}`}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 Ver
                               </Link>

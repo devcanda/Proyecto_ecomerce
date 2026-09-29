@@ -93,7 +93,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           El producto que buscas no existe o ha sido eliminado.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/products">Ver todos los productos</Link>
+          <Link href="/productos">Ver todos los productos</Link>
         </Button>
       </div>
     )
@@ -107,7 +107,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         asChild
         className="mb-4 -ml-2 sm:hidden"
       >
-        <Link href="/products">
+        <Link href="/productos">
           <ChevronLeft className="mr-1 h-4 w-4" />
           Volver
         </Link>
@@ -121,11 +121,11 @@ export default function ProductPage({ params }: ProductPageProps) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/products">Productos</BreadcrumbLink>
+            <BreadcrumbLink href="/productos">Productos</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/products?category=${product.category}`}>
+            <BreadcrumbLink href={`/productos?category=${product.category}`}>
               {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
             </BreadcrumbLink>
           </BreadcrumbItem>

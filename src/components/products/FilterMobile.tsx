@@ -40,7 +40,7 @@ export function FilterMobile({
         <SheetHeader>
           <SheetTitle>Filtros</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="mt-6 px-4">
           <FilterSidebar filters={filters} onFiltersChange={onFiltersChange} />
         </div>
       </SheetContent>

@@ -60,7 +60,8 @@ export function PriceFilter({
             min={minPrice}
             max={maxPrice}
             step={10}
-            className="w-full"
+            // Modo claro: riel y controles con mas contraste sobre el fondo gris
+            className="w-full [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-track]]:bg-neutral-300 dark:[&_[data-slot=slider-thumb]]:border dark:[&_[data-slot=slider-track]]:bg-muted"
           />
 
           <div className="flex items-center gap-2">
@@ -71,7 +72,7 @@ export function PriceFilter({
                   type="number"
                   value={priceRange[0]}
                   onChange={handleMinChange}
-                  className="h-9 text-sm"
+                  className="h-9 text-sm border-neutral-300 bg-white dark:border-input"
                   min={minPrice}
                   max={priceRange[1]}
                 />
@@ -85,7 +86,7 @@ export function PriceFilter({
                   type="number"
                   value={priceRange[1]}
                   onChange={handleMaxChange}
-                  className="h-9 text-sm"
+                  className="h-9 text-sm border-neutral-300 bg-white dark:border-input"
                   min={priceRange[0]}
                   max={maxPrice}
                 />

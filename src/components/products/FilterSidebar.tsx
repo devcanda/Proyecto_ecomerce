@@ -32,7 +32,9 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Filtros</h2>
+        <h2 className="rounded-md border border-brand-blue/30 bg-brand-blue/10 px-6 py-1.5 text-lg font-semibold">
+          Filtros
+        </h2>
         {hasActiveFilters && (
           <Button
             variant="ghost"

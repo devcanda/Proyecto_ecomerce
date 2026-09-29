@@ -10,7 +10,7 @@ const promos = [
     id: 1,
     text: "Audio Que Te Envuelve. Cómodo, Duradero Y Con Sonido Que Se Siente.",
     cta: "Ver Audífonos",
-    href: "/products?category=audifonos",
+    href: "/productos?category=audifonos",
     image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=1600",
     // Zona de la foto que se mantiene visible al recortar (object-position)
     position: "50% 40%",
@@ -19,7 +19,7 @@ const promos = [
     id: 2,
     text: "Nuevos Lanzamientos. Teclados Icónicos Que Marcan La Diferencia.",
     cta: "Ver Teclados",
-    href: "/products?category=teclados",
+    href: "/productos?category=teclados",
     image: "https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=1600",
     position: "50% 50%",
   },
@@ -84,7 +84,7 @@ export function PromoCards() {
 
         {/* Tarjeta destacada */}
         <Link
-          href="/products"
+          href="/productos"
           // MOBILE_CARD va primero para que la proporcion ancha de tablet (16/5) tenga prioridad
           className={cn(MOBILE_CARD, "group relative overflow-hidden rounded-2xl sm:col-span-2 sm:aspect-[16/5] lg:col-span-1 lg:aspect-[8/5]")}
         >

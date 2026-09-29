@@ -48,7 +48,7 @@ export function RecommendedGrid() {
         <Tile
           title="Zona Gamer"
           cta="Ver Productos"
-          href="/products?category=componentes"
+          href="/productos?category=componentes"
           image="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="h-80 lg:row-span-2 lg:h-auto lg:min-h-[560px]"
@@ -56,7 +56,7 @@ export function RecommendedGrid() {
         <Tile
           title="Audífonos"
           cta="Ver Audífonos"
-          href="/products?category=audifonos"
+          href="/productos?category=audifonos"
           image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1000"
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="h-64 lg:h-[268px]"
@@ -64,7 +64,7 @@ export function RecommendedGrid() {
         <Tile
           title="Teclados"
           cta="Ver Teclados"
-          href="/products?category=teclados"
+          href="/productos?category=teclados"
           image="https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=1000"
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="h-64 lg:h-[268px]"
@@ -72,7 +72,7 @@ export function RecommendedGrid() {
         <Tile
           title="Tendencias"
           cta="Explorar Tienda"
-          href="/products"
+          href="/productos"
           image="https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=1800"
           sizes="100vw"
           withArrow

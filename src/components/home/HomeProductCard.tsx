@@ -37,7 +37,7 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
   return (
     <div className="group flex flex-col">
       <Link
-        href={`/products/${product.slug}`}
+        href={`/productos/${product.slug}`}
         className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted"
       >
         <Image
@@ -56,7 +56,7 @@ export function HomeProductCard({ product }: HomeProductCardProps) {
         </span>
       </div>
 
-      <Link href={`/products/${product.slug}`}>
+      <Link href={`/productos/${product.slug}`}>
         <h3 className="mt-1 text-sm font-medium transition-colors hover:text-brand-link sm:mt-2 sm:text-base">
           {product.name}
         </h3>

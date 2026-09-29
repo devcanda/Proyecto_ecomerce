@@ -31,7 +31,7 @@ export default function CheckoutCancelPage() {
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full">
-              <Link href="/products">
+              <Link href="/productos">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Seguir comprando
               </Link>

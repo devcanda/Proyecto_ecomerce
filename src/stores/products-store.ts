@@ -31,6 +31,8 @@ const defaultFilters: FilterState = {
   search: "",
 }
 
+let latestProductsRequest = 0
+
 export const useProductsStore = create<ProductsState>((set, get) => ({
   products: [],
   searchApproximate: false,
@@ -43,6 +45,8 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   error: null,
 
   fetchProducts: async (filterOverrides) => {
+    // Al escribir en el buscador se lanzan varias peticiones; solo cuenta la ultima
+    const requestId = ++latestProductsRequest
     set({ loading: true, error: null })
     try {
       const filters = { ...get().filters, ...filterOverrides }
@@ -71,8 +75,10 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (!response.ok) throw new Error("Failed to fetch products")
 
       const data = await response.json()
+      if (requestId !== latestProductsRequest) return
       set({ products: data.products, searchApproximate: data.approximate ?? false, loading: false })
     } catch (error) {
+      if (requestId !== latestProductsRequest) return
       set({ error: (error as Error).message, loading: false })
     }
   },
