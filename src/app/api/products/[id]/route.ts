@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { productInclude, transformProduct } from "@/lib/transformers"
-import { parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
+import { parseGender, parseSizeType, parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
 import { requireAdmin } from "@/lib/admin-guard"
 import { slugify } from "@/lib/slug"
 
@@ -66,6 +66,8 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
           brandId: body.brandId,
           // undefined = no cambia; null = quitar el modelo
           modelId: body.modelId === undefined ? undefined : body.modelId || null,
+          sizeType: variants ? parseSizeType(body.sizeType, variants) : undefined,
+          gender: body.gender === undefined ? undefined : parseGender(body.gender),
         },
         include: productInclude,
       })

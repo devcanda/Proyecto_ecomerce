@@ -29,6 +29,7 @@ const defaultFilters: FilterState = {
   priceRange: [0, 10000],
   sortBy: "newest",
   search: "",
+  genders: [],
 }
 
 let latestProductsRequest = 0
@@ -63,6 +64,9 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       }
       if (filters.priceRange[1] < 10000) {
         params.set("maxPrice", filters.priceRange[1].toString())
+      }
+      if (filters.genders.length) {
+        params.set("gender", filters.genders.join(","))
       }
       if (filters.search.trim()) {
         params.set("search", filters.search.trim())

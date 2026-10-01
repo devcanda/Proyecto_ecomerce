@@ -1,4 +1,6 @@
 import type { Prisma } from "@prisma/client"
+import type { Gender, VariantType } from "@/types"
+import { isGender, isVariantType, normalizeSizeType } from "@/lib/category-type"
 
 export interface VariantInput {
   id?: string
@@ -42,6 +44,15 @@ export function parseVariants(raw: unknown): VariantInput[] {
     })
     .filter((variant) => variant.size || variant.color)
 }
+
+// Tipo de talla recibido del formulario (sin variantes = producto simple, NONE)
+export function parseSizeType(raw: unknown, variants: VariantInput[]): VariantType {
+  if (variants.length === 0) return "NONE"
+  return isVariantType(raw) ? normalizeSizeType(raw).sizeType : "NONE"
+}
+
+// Genero recibido del formulario (null = no aplica)
+export const parseGender = (raw: unknown): Gender | null => (isGender(raw) ? raw : null)
 
 export const totalVariantStock = (variants: VariantInput[]) =>
   variants.reduce((total, variant) => total + variant.stock, 0)

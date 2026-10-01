@@ -1,5 +1,8 @@
 // Tipo de tallas que usa una categoria
-export type VariantType = "NONE" | "FOOTWEAR" | "CLOTHING"
+export type VariantType = "NONE" | "FOOTWEAR" | "CLOTHING" | "CLOTHING_MEN" | "CLOTHING_WOMEN"
+
+// Para quien es el producto (sin valor = no aplica)
+export type Gender = "MEN" | "WOMEN" | "UNISEX"
 
 // Talla y/o color de un producto; price ya trae el precio final (el propio o el del producto)
 export interface ProductVariant {
@@ -32,6 +35,7 @@ export interface Product {
   // Imagen de la guia de tallas de la marca
   sizeGuide?: string
   model?: string
+  gender?: Gender
 }
 
 export interface Category {
@@ -64,4 +68,5 @@ export interface FilterState {
   priceRange: [number, number]
   sortBy: 'popular' | 'price-asc' | 'price-desc' | 'newest' | 'rating'
   search: string
+  genders: Gender[]
 }

@@ -11,6 +11,7 @@ import { useCartStore } from "@/stores/cart-store"
 import { Price } from "@/components/ui/price"
 import { formatPrice } from "@/lib/format"
 import { VariantPicker } from "./VariantPicker"
+import { genderLabel } from "@/lib/category-type"
 
 interface ProductDetailProps {
   product: Product
@@ -117,8 +118,13 @@ export function ProductDetail({ product, onColorImagesChange }: ProductDetailPro
             {hasDiscount && <Badge variant="destructive">-{discountPercent}%</Badge>}
           </div>
         )}
-        <p className="text-xs font-semibold uppercase tracking-wider text-brand-link">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-link">
           {product.brand}
+          {product.gender && (
+            <span className="rounded-full bg-muted px-2 py-0.5 normal-case tracking-normal text-muted-foreground">
+              {genderLabel(product.gender)}
+            </span>
+          )}
         </p>
 
         {/* Name */}

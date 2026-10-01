@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { BrandFilter } from "./BrandFilter"
 import { PriceFilter } from "./PriceFilter"
 import { CategoryFilter } from "./CategoryFilter"
+import { GenderFilter } from "./GenderFilter"
 import { FilterState } from "@/types"
 
 interface FilterSidebarProps {
@@ -16,6 +17,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
   const hasActiveFilters =
     filters.brands.length > 0 ||
     filters.categories.length > 0 ||
+    filters.genders.length > 0 ||
     filters.priceRange[0] > 0 ||
     filters.priceRange[1] < 5000
 
@@ -26,6 +28,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
       priceRange: [0, 5000],
       sortBy: filters.sortBy,
       search: filters.search,
+      genders: [],
     })
   }
 
@@ -47,6 +50,11 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
           </Button>
         )}
       </div>
+
+      <GenderFilter
+        selectedGenders={filters.genders}
+        onGendersChange={(genders) => onFiltersChange({ ...filters, genders })}
+      />
 
       <BrandFilter
         selectedBrands={filters.brands}

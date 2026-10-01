@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowDown, ArrowLeft, Layers, Loader2, Lock, Package } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -19,8 +19,8 @@ import { SearchableSelect, SelectOption } from "@/components/admin/SearchableSel
 import { slugify } from "@/lib/slug"
 import { VariantRow, VariantsEditor } from "@/components/admin/VariantsEditor"
 import { SizeGuideField } from "@/components/admin/SizeGuideField"
-import { VARIANT_TYPES } from "@/lib/category-type"
-import type { VariantType } from "@/types"
+import type { Gender, VariantType } from "@/types"
+import { GENDERS, guessGender, normalizeSizeType } from "@/lib/category-type"
 import { cn } from "@/lib/utils"
 
 // Bordes mas marcados en modo claro para distinguir bien los campos del formulario
@@ -66,6 +66,8 @@ export interface EditableProduct {
   categoryId: string
   brandId: string
   modelId?: string
+  sizeType?: VariantType
+  gender?: Gender
   variants?: VariantRow[]
 }
 
@@ -124,7 +126,16 @@ export function ProductForm({ product }: ProductFormProps) {
   const [variants, setVariants] = useState<VariantRow[]>(() => product?.variants ?? [])
   // Aviso del editor de tallas/colores si falta completar algo
   const [variantsProblem, setVariantsProblem] = useState<string | null>(null)
-  const [typeSaving, setTypeSaving] = useState(false)
+  // Producto simple (un precio y un stock) o variable (colores y/o tallas)
+  const [isVariable, setIsVariable] = useState(() => Boolean(product?.variants?.length))
+  // Los tipos antiguos "Ropa hombre/mujer" se convierten en "Ropa" + genero
+  const initialType = normalizeSizeType(product?.sizeType ?? "NONE", product?.gender)
+  const [sizeType, setSizeType] = useState<VariantType>(initialType.sizeType)
+  // Para quien es el producto (undefined = no aplica)
+  const [gender, setGender] = useState<Gender | undefined>(initialType.gender)
+  const [genderTouched, setGenderTouched] = useState(Boolean(product))
+  // Si el usuario ya eligio el tipo a mano, la categoria deja de sugerirlo
+  const [typeTouched, setTypeTouched] = useState(Boolean(product))
   const [models, setModels] = useState<ProductModel[]>([])
 
   const {
@@ -199,27 +210,29 @@ export function ProductForm({ product }: ProductFormProps) {
         ? items
         : [...items, created].sort((a, b) => a.name.localeCompare(b.name))
     )
+    suggestFromCategory(created)
     return { value: created.id, label: created.name }
   }
 
-  // El tipo es de la categoria: cambiarlo afecta a todos sus productos
-  const handleCategoryType = async (variantType: VariantType) => {
-    if (!categoryId) return
-    setTypeSaving(true)
-    try {
-      const response = await fetch(`/api/categories/${categoryId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantType }),
-      })
-      if (response.ok) {
-        setCategories((items) =>
-          items.map((item) => (item.id === categoryId ? { ...item, variantType } : item))
-        )
-      }
-    } finally {
-      setTypeSaving(false)
-    }
+  // La categoria sugiere si el producto es variable y su tipo de talla (ej. Calzado -> tallas de calzado)
+  const suggestFromCategory = (category?: Category) => {
+    if (!category) return
+    // "Calzado mujer" -> Mujer
+    const suggestedGender = guessGender(category.name)
+    if (!genderTouched && suggestedGender) setGender(suggestedGender)
+    if (typeTouched || !category.variantType || category.variantType === "NONE") return
+    setIsVariable(true)
+    setSizeType(normalizeSizeType(category.variantType).sizeType)
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setValue("categoryId", value, { shouldValidate: true })
+    suggestFromCategory(categories.find((item) => item.id === value))
+  }
+
+  const chooseProductKind = (variable: boolean) => {
+    setTypeTouched(true)
+    setIsVariable(variable)
   }
 
   const handleSizeGuideChange = (sizeGuide: string | undefined) => {
@@ -274,17 +287,25 @@ export function ProductForm({ product }: ProductFormProps) {
     fetchData()
   }, [])
 
-  const selectedCategory = categories.find((item) => item.id === categoryId)
   const selectedBrand = brands.find((item) => item.id === brandId)
-  const variantType: VariantType = selectedCategory?.variantType ?? "NONE"
-  const hasVariantFields = variantType !== "NONE"
+  const hasVariantFields = isVariable
   const variantStock = variants.reduce((total, row) => total + (row.stock || 0), 0)
   const basePrice = watch("price")
   const hasColorPhotos = hasVariantFields && variants.some((row) => row.images?.length)
 
+  // Lleva a la seccion donde se escribe el stock de cada color/talla
+  const goToVariants = () => {
+    const section = document.getElementById("colores-y-tallas")
+    section?.scrollIntoView({ behavior: "smooth", block: "start" })
+    // Pone el cursor en la primera casilla de stock de esa seccion
+    window.setTimeout(() => {
+      section?.querySelector<HTMLInputElement>("input[aria-label^='Stock']")?.focus({ preventScroll: true })
+    }, 500)
+  }
+
   const onSubmit = async (data: ProductFormData) => {
     if (hasVariantFields && (variantsProblem || variants.length === 0)) {
-      setSaveError(`Revisa la seccion "Tallas y colores": ${variantsProblem ?? "elige al menos una talla."}`)
+      setSaveError(`Revisa la seccion "Colores y tallas": ${variantsProblem ?? "completa los colores o tallas."}`)
       return
     }
 
@@ -303,6 +324,8 @@ export function ProductForm({ product }: ProductFormProps) {
           images: images.map((img) => img.url),
           // Si la categoria no usa tallas se envia vacio para quitar variantes anteriores
           variants: hasVariantFields ? variants : [],
+          sizeType: hasVariantFields ? sizeType : "NONE",
+          gender: gender ?? null,
           stock: hasVariantFields ? variantStock : data.stock,
         }),
       })
@@ -346,6 +369,65 @@ export function ProductForm({ product }: ProductFormProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tipo de producto</CardTitle>
+            <CardDescription>¿El producto tiene un solo precio y stock, o se vende en varios colores o tallas?</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Tipo de producto">
+              {(
+                [
+                  {
+                    variable: false,
+                    icon: Package,
+                    title: "Producto simple",
+                    hint: "Un solo precio y un solo stock. Ej. un teclado, unos audífonos",
+                  },
+                  {
+                    variable: true,
+                    icon: Layers,
+                    title: "Producto variable",
+                    hint: "Se vende en varios colores y/o tallas. Ej. tenis, ropa, bolsos de colores",
+                  },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.title}
+                  type="button"
+                  role="radio"
+                  aria-checked={isVariable === option.variable}
+                  onClick={() => chooseProductKind(option.variable)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                    isVariable === option.variable
+                      ? "border-brand-blue bg-brand-blue/10"
+                      : "border-neutral-300 hover:border-brand-blue/60 dark:border-input"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                      isVariable === option.variable ? "bg-brand-blue text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <option.icon className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-semibold">{option.title}</span>
+                    <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {!isVariable && Boolean(product?.variants?.length) && (
+              <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                Este producto tiene colores o tallas. Si lo guardas como simple, se quitarán.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Informacion Basica</CardTitle>
@@ -407,7 +489,7 @@ export function ProductForm({ product }: ProductFormProps) {
                   id="categoryId"
                   options={toOptions(categories)}
                   value={categoryId}
-                  onChange={(value) => setValue("categoryId", value, { shouldValidate: true })}
+                  onChange={handleCategoryChange}
                   placeholder="Seleccionar categoria"
                   searchPlaceholder="Buscar o añadir categoria..."
                   onCreate={handleCreateCategory}
@@ -415,34 +497,6 @@ export function ProductForm({ product }: ProductFormProps) {
                 />
                 {errors.categoryId && (
                   <p className="text-sm text-destructive">{errors.categoryId.message}</p>
-                )}
-                {selectedCategory && (
-                  <div className="space-y-1.5 pt-1">
-                    <p className="text-xs text-muted-foreground">
-                      Tipo de categoria {typeSaving && <Loader2 className="inline h-3 w-3 animate-spin" />}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Tipo de categoria">
-                      {VARIANT_TYPES.map((type) => (
-                        <button
-                          key={type.value}
-                          type="button"
-                          role="radio"
-                          aria-checked={variantType === type.value}
-                          title={type.hint}
-                          disabled={typeSaving}
-                          onClick={() => handleCategoryType(type.value)}
-                          className={cn(
-                            "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
-                            variantType === type.value
-                              ? "border-brand-blue bg-brand-blue/10 text-brand-link"
-                              : "border-neutral-300 text-muted-foreground hover:border-brand-blue/60 dark:border-input"
-                          )}
-                        >
-                          {type.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 )}
               </div>
               <div className="space-y-2">
@@ -476,6 +530,39 @@ export function ProductForm({ product }: ProductFormProps) {
                   disabled={!brandId}
                 />
               </div>
+            </div>
+
+            {/* Genero */}
+            <div className="space-y-2">
+              <Label>
+                ¿Para quién es? <span className="font-normal text-muted-foreground">(opcional)</span>
+              </Label>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Para quién es el producto">
+                {[{ value: undefined, label: "No aplica" }, ...GENDERS].map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={gender === option.value}
+                    onClick={() => {
+                      setGenderTouched(true)
+                      setGender(option.value)
+                    }}
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                      gender === option.value
+                        ? "border-brand-blue bg-brand-blue/10 text-brand-link"
+                        : "border-neutral-300 text-muted-foreground hover:border-brand-blue/60 dark:border-input"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sirve para el filtro de la tienda y para sugerir las tallas de ropa. Unisex aparece al filtrar Hombre o
+                Mujer.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -530,11 +617,43 @@ export function ProductForm({ product }: ProductFormProps) {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock">Stock</Label>
+                <Label htmlFor="stock" className="flex items-center gap-1.5">
+                  Stock
+                  {hasVariantFields && (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      Automático
+                    </span>
+                  )}
+                </Label>
                 {hasVariantFields ? (
                   <>
-                    <Input id="stock" className={FIELD_CLASS} value={variantStock} disabled readOnly />
-                    <p className="text-xs text-muted-foreground">Se calcula sumando el stock de cada talla.</p>
+                    {/* En productos variables el stock se escribe por color/talla: al tocar aqui se lleva a esa seccion */}
+                    <button
+                      id="stock"
+                      type="button"
+                      onClick={goToVariants}
+                      title="Este campo se calcula solo. Toca para ir a Colores y tallas"
+                      className="flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-dashed border-neutral-300 bg-muted/60 px-3 text-left text-sm text-muted-foreground transition-colors hover:border-brand-blue/60 dark:border-input"
+                    >
+                      <span>
+                        <b className="text-foreground">{variantStock}</b> {variantStock === 1 ? "unidad" : "unidades"}
+                      </span>
+                      <Lock className="h-3.5 w-3.5 shrink-0" />
+                    </button>
+                    <div className="flex items-start gap-2 rounded-md bg-brand-blue/10 px-2.5 py-2 text-xs text-brand-link">
+                      <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <p>
+                        Esta casilla no se llena aquí. En un producto variable el stock se escribe en cada color o
+                        talla, y aquí se suma solo.{" "}
+                        <button
+                          type="button"
+                          onClick={goToVariants}
+                          className="inline-flex items-center gap-0.5 font-semibold underline-offset-2 hover:underline"
+                        >
+                          Ir a Colores y tallas <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <Input
@@ -554,18 +673,19 @@ export function ProductForm({ product }: ProductFormProps) {
         </Card>
 
         {hasVariantFields && (
-          <Card>
+          <Card id="colores-y-tallas" className="scroll-mt-20">
             <CardHeader>
-              <CardTitle>Tallas y colores</CardTitle>
-              <CardDescription>
-                {variantType === "FOOTWEAR"
-                  ? "Colores y tallas de calzado disponibles, con su precio y stock"
-                  : "Colores y tallas de ropa disponibles, con su precio y stock"}
-              </CardDescription>
+              <CardTitle>Colores y tallas</CardTitle>
+              <CardDescription>Variantes del producto con su precio y stock</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <VariantsEditor
-                variantType={variantType}
+                sizeType={sizeType}
+                gender={gender}
+                onSizeTypeChange={(type) => {
+                  setTypeTouched(true)
+                  setSizeType(type)
+                }}
                 value={variants}
                 onChange={(rows, problem) => {
                   setVariants(rows)
@@ -574,7 +694,7 @@ export function ProductForm({ product }: ProductFormProps) {
                 basePrice={basePrice}
                 fieldClassName={FIELD_CLASS}
               />
-              {selectedBrand ? (
+              {sizeType === "NONE" ? null : selectedBrand ? (
                 <SizeGuideField
                   key={selectedBrand.id}
                   brandId={selectedBrand.id}

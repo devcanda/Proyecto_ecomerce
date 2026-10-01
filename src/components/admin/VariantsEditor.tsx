@@ -5,7 +5,8 @@ import Image from "next/image"
 import { ChevronDown, Copy, ImagePlus, Loader2, Palette, Plus, RotateCcw, Ruler, Star, Trash2, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { PriceInput } from "@/components/admin/PriceInput"
-import { CLOTHING_SIZES, FOOTWEAR_SIZES } from "@/lib/category-type"
+import { compareSizes, sizePresets, sizeTypeLabel, VARIANT_TYPES, type SizePresetGroup } from "@/lib/category-type"
+import type { Gender, VariantType } from "@/types"
 import { formatAmount } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +22,11 @@ export interface VariantRow {
 }
 
 interface VariantsEditorProps {
-  variantType: "FOOTWEAR" | "CLOTHING"
+  // Tipo de talla: NONE = solo colores (sin tallas)
+  sizeType: VariantType
+  onSizeTypeChange: (sizeType: VariantType) => void
+  // Genero del producto: cambia las tallas de ropa sugeridas
+  gender?: Gender
   value: VariantRow[]
   // problem: texto a mostrar si falta completar algo (null si todo esta bien)
   onChange: (rows: VariantRow[], problem: string | null) => void
@@ -62,7 +67,8 @@ function toGroups(rows: VariantRow[]): ColorGroup[] {
       groups.push(group)
     }
     if (group.images.length === 0 && row.images?.length) group.images = row.images
-    if (row.size) group.sizes.push({ id: row.id, size: row.size, price: row.price, stock: row.stock })
+    // Sin talla (solo colores) la fila del color lleva size ""
+    group.sizes.push({ id: row.id, size: row.size, price: row.price, stock: row.stock })
   }
   return groups
 }
@@ -80,13 +86,24 @@ function toRows(groups: ColorGroup[], mode: Mode): VariantRow[] {
   )
 }
 
+// Fila unica de un color cuando el producto no usa tallas
+const colorOnlyRow = (sizes: SizeRow[]): SizeRow[] => [
+  {
+    id: sizes[0]?.id,
+    size: "",
+    price: sizes.find((row) => row.price !== undefined)?.price,
+    stock: sizes.reduce((sum, row) => sum + (row.stock || 0), 0),
+  },
+]
+
 // Revisa que no falte nada antes de guardar
-function findProblem(groups: ColorGroup[], mode: Mode): string | null {
+function findProblem(groups: ColorGroup[], mode: Mode, withSizes: boolean): string | null {
   if (mode === "colors") {
-    if (groups.length === 0) return "Agrega al menos un color con sus tallas."
+    if (groups.length === 0) return withSizes ? "Agrega al menos un color con sus tallas." : "Agrega al menos un color."
     if (groups.some((group) => !group.color.trim())) return "Escribe el nombre de cada color."
     const names = groups.map((group) => group.color.trim().toLowerCase())
     if (new Set(names).size !== names.length) return "Hay colores con el mismo nombre."
+    if (!withSizes) return null
     const empty = groups.find((group) => group.sizes.length === 0)
     if (empty) return `El color "${empty.color.trim()}" no tiene tallas.`
     return null
@@ -95,16 +112,25 @@ function findProblem(groups: ColorGroup[], mode: Mode): string | null {
   return null
 }
 
-export function VariantsEditor({ variantType, value, onChange, basePrice, fieldClassName }: VariantsEditorProps) {
-  const presets = variantType === "FOOTWEAR" ? FOOTWEAR_SIZES : CLOTHING_SIZES
+export function VariantsEditor({
+  sizeType,
+  onSizeTypeChange,
+  gender,
+  value,
+  onChange,
+  basePrice,
+  fieldClassName,
+}: VariantsEditorProps) {
+  const withSizes = sizeType !== "NONE"
+  const presetGroups = sizePresets(sizeType, gender)
   const [mode, setMode] = useState<Mode>(() =>
-    value.length > 0 && value.every((row) => !row.color) ? "sizes" : "colors"
+    withSizes && value.length > 0 && value.every((row) => !row.color) ? "sizes" : "colors"
   )
   const [groups, setGroups] = useState<ColorGroup[]>(() => {
     const initial = toGroups(value)
-    if (initial.length > 0) return initial
-    // Producto nuevo: se empieza con un color vacio listo para llenar
-    return [{ uid: newUid(), color: "", images: [], sizes: [] }]
+    const start = initial.length > 0 ? initial : [{ uid: newUid(), color: "", images: [], sizes: [] }]
+    // Sin tallas cada color lleva una sola fila de precio y stock
+    return withSizes ? start : start.map((group) => ({ ...group, sizes: colorOnlyRow(group.sizes) }))
   })
   // Selector de tallas abierto (en tarjetas nuevas o sin tallas)
   const [openPicker, setOpenPicker] = useState<string | null>(
@@ -114,10 +140,10 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
   // Ultima version de los colores (para las subidas de fotos, que terminan despues)
   const groupsRef = useRef(groups)
 
-  const emit = (nextGroups: ColorGroup[], nextMode: Mode = mode) => {
+  const emit = (nextGroups: ColorGroup[], nextMode: Mode = mode, nextWithSizes: boolean = withSizes) => {
     groupsRef.current = nextGroups
     setGroups(nextGroups)
-    onChange(toRows(nextGroups, nextMode), findProblem(nextGroups, nextMode))
+    onChange(toRows(nextGroups, nextMode), findProblem(nextGroups, nextMode, nextWithSizes))
   }
 
   const updateGroup = (uid: string, patch: Partial<ColorGroup>) =>
@@ -133,15 +159,7 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
       )
     )
 
-  const sortSizes = (list: SizeRow[]) =>
-    [...list].sort((a, b) => {
-      const ia = presets.indexOf(a.size)
-      const ib = presets.indexOf(b.size)
-      if (ia !== -1 && ib !== -1) return ia - ib
-      if (ia !== -1) return -1
-      if (ib !== -1) return 1
-      return a.size.localeCompare(b.size, "es", { numeric: true })
-    })
+  const sortSizes = (list: SizeRow[]) => [...list].sort((a, b) => compareSizes(a.size, b.size))
 
   const toggleSize = (group: ColorGroup, size: string) => {
     const exists = group.sizes.some((row) => row.size === size)
@@ -156,9 +174,32 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
     })
 
   const addColor = () => {
-    const group: ColorGroup = { uid: newUid(), color: "", images: [], sizes: [] }
-    emit([...groups, group])
-    setOpenPicker(group.uid)
+    const group: ColorGroup = {
+      uid: newUid(),
+      color: "",
+      images: [],
+      sizes: withSizes ? [] : colorOnlyRow([]),
+    }
+    emit([...groupsRef.current, group])
+    if (withSizes) setOpenPicker(group.uid)
+  }
+
+  // Cambiar el tipo de talla: sin talla junta las tallas de cada color en una fila; con talla hay que elegirlas
+  const changeSizeType = (next: VariantType) => {
+    if (next === sizeType) return
+    const nextWithSizes = next !== "NONE"
+    let nextGroups = groupsRef.current
+    let nextMode = mode
+    if (!nextWithSizes) {
+      nextGroups = nextGroups.map((group) => ({ ...group, sizes: colorOnlyRow(group.sizes) }))
+      nextMode = "colors"
+      setMode("colors")
+    } else if (!withSizes) {
+      nextGroups = nextGroups.map((group) => ({ ...group, sizes: [] }))
+      setOpenPicker(nextGroups[0]?.uid ?? null)
+    }
+    onSizeTypeChange(next)
+    emit(nextGroups, nextMode, nextWithSizes)
   }
 
   const removeColor = (uid: string) => emit(groups.filter((group) => group.uid !== uid))
@@ -183,68 +224,99 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
     (total, group) => total + group.sizes.reduce((sum, row) => sum + (row.stock || 0), 0),
     0
   )
-  const problem = findProblem(groups, mode)
+  const problem = findProblem(groups, mode, withSizes)
+  const unitLabel = sizeTypeLabel(sizeType)
 
   return (
     <div className="space-y-5">
-      {/* Como se vende */}
+      {/* Tipo de talla */}
       <div className="space-y-2">
-        <p className="text-sm font-medium">¿Cómo se vende este producto?</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {(
-            [
-              {
-                value: "colors",
-                icon: Palette,
-                title: "Por colores y tallas",
-                hint: "Ej. un tenis en negro y en blanco",
-              },
-              { value: "sizes", icon: Ruler, title: "Solo por tallas", hint: "Un solo color, varias tallas" },
-            ] as const
-          ).map((option) => (
+        <p className="text-sm font-medium">¿Qué tipo de talla usa?</p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {VARIANT_TYPES.map((type) => (
             <button
-              key={option.value}
+              key={type.value}
               type="button"
-              onClick={() => changeMode(option.value)}
-              aria-pressed={mode === option.value}
+              onClick={() => changeSizeType(type.value)}
+              aria-pressed={sizeType === type.value}
               className={cn(
-                "flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
-                mode === option.value
+                "rounded-lg border p-3 text-left transition-colors",
+                sizeType === type.value
                   ? "border-brand-blue bg-brand-blue/10"
                   : "border-neutral-300 hover:border-brand-blue/60 dark:border-input"
               )}
             >
-              <span
-                className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                  mode === option.value ? "bg-brand-blue text-white" : "bg-muted text-muted-foreground"
-                )}
-              >
-                <option.icon className="h-[18px] w-[18px]" />
+              <span className={cn("block text-sm font-semibold", sizeType === type.value && "text-brand-link")}>
+                {type.label}
               </span>
-              <span>
-                <span className="block text-sm font-semibold">{option.title}</span>
-                <span className="block text-xs text-muted-foreground">{option.hint}</span>
-              </span>
+              <span className="block text-xs text-muted-foreground">{type.hint}</span>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Colores: con tallas se puede elegir un solo color */}
+      {withSizes && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">¿Viene en varios colores?</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(
+              [
+                {
+                  value: "colors",
+                  icon: Palette,
+                  title: "Sí, por colores y tallas",
+                  hint: "Ej. un tenis en negro y en blanco",
+                },
+                { value: "sizes", icon: Ruler, title: "No, un solo color", hint: "Solo se eligen las tallas" },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => changeMode(option.value)}
+                aria-pressed={mode === option.value}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                  mode === option.value
+                    ? "border-brand-blue bg-brand-blue/10"
+                    : "border-neutral-300 hover:border-brand-blue/60 dark:border-input"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                    mode === option.value ? "bg-brand-blue text-white" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <option.icon className="h-[18px] w-[18px]" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold">{option.title}</span>
+                  <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pasos */}
       <ol className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-        {mode === "colors" && (
-          <li>
-            <b className="text-brand-link">1.</b> Agrega el color y sus fotos
+        {(withSizes
+          ? mode === "colors"
+            ? [
+                "Agrega el color y sus fotos",
+                "Elige sus tallas",
+                "Revisa precio y stock (el precio del producto se usa por defecto)",
+              ]
+            : ["Elige las tallas", "Revisa precio y stock (el precio del producto se usa por defecto)"]
+          : ["Agrega cada color y sus fotos", "Pon el stock de cada color (el precio del producto se usa por defecto)"]
+        ).map((step, index) => (
+          <li key={step}>
+            <b className="text-brand-link">{index + 1}.</b> {step}
           </li>
-        )}
-        <li>
-          <b className="text-brand-link">{mode === "colors" ? "2." : "1."}</b> Elige las tallas
-        </li>
-        <li>
-          <b className="text-brand-link">{mode === "colors" ? "3." : "2."}</b> Revisa precio y stock (el precio del
-          producto se usa por defecto)
-        </li>
+        ))}
       </ol>
 
       {/* Tarjetas de color */}
@@ -277,7 +349,8 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="rounded-full bg-background px-2.5 py-1 text-xs text-muted-foreground">
-                        {group.sizes.length} {group.sizes.length === 1 ? "talla" : "tallas"} · {groupStock} und.
+                        {withSizes && `${group.sizes.length} ${group.sizes.length === 1 ? "talla" : "tallas"} · `}
+                        {groupStock} und.
                       </span>
                       {groups.length > 1 && (
                         <button
@@ -300,129 +373,173 @@ export function VariantsEditor({ variantType, value, onChange, basePrice, fieldC
                 </div>
               )}
 
-              <div className="space-y-3 p-3">
-                {/* Tallas elegidas + boton para elegir */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium">{variantType === "FOOTWEAR" ? "Tallas (COL)" : "Tallas"}</span>
-                  <button
-                    type="button"
-                    onClick={() => setOpenPicker(pickerOpen ? null : group.uid)}
-                    className="flex items-center gap-1 rounded-md border border-neutral-300 px-2.5 py-1 text-xs font-medium hover:bg-muted dark:border-input"
-                  >
-                    {pickerOpen ? "Listo" : group.sizes.length ? "Cambiar tallas" : "Elegir tallas"}
-                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", pickerOpen && "rotate-180")} />
-                  </button>
-                  {previous && group.sizes.length === 0 && (
+              {!withSizes && group.sizes[0] && (
+                <div className="flex flex-wrap items-end gap-4 p-3">
+                  <div className="space-y-1">
+                    <span className="block text-xs font-medium text-muted-foreground">Precio (COP)</span>
+                    <div className="flex items-center gap-2">
+                      <PriceInput
+                        value={group.sizes[0].price}
+                        onChange={(price) => updateSize(group, "", { price })}
+                        placeholder={basePrice ? formatAmount(basePrice) : "Precio del producto"}
+                        className={cn("h-9 w-36", fieldClassName)}
+                        aria-label={`Precio color ${group.color}`}
+                      />
+                      {group.sizes[0].price === undefined ? (
+                        <span className="whitespace-nowrap text-xs text-muted-foreground">Precio base</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updateSize(group, "", { price: undefined })}
+                          className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-brand-link hover:underline"
+                        >
+                          <RotateCcw className="h-3 w-3" /> Usar precio base
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="block text-xs font-medium text-muted-foreground">Stock</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={group.sizes[0].stock}
+                      onFocus={(event) => event.target.select()}
+                      onChange={(event) =>
+                        updateSize(group, "", { stock: Math.max(0, Math.floor(Number(event.target.value) || 0)) })
+                      }
+                      className={cn("h-9 w-24", fieldClassName)}
+                      aria-label={`Stock color ${group.color}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {withSizes && (
+                <div className="space-y-3 p-3">
+                  {/* Tallas elegidas + boton para elegir */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">Tallas{unitLabel && ` (${unitLabel})`}</span>
                     <button
                       type="button"
-                      onClick={() => copySizes(group, previous)}
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-brand-link hover:bg-brand-blue/10"
+                      onClick={() => setOpenPicker(pickerOpen ? null : group.uid)}
+                      className="flex items-center gap-1 rounded-md border border-neutral-300 px-2.5 py-1 text-xs font-medium hover:bg-muted dark:border-input"
                     >
-                      <Copy className="h-3.5 w-3.5" />
-                      Usar las mismas tallas de {previous.color || "el color anterior"}
+                      {pickerOpen ? "Listo" : group.sizes.length ? "Cambiar tallas" : "Elegir tallas"}
+                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", pickerOpen && "rotate-180")} />
                     </button>
+                    {previous && group.sizes.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => copySizes(group, previous)}
+                        className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-brand-link hover:bg-brand-blue/10"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        Usar las mismas tallas de {previous.color || "el color anterior"}
+                      </button>
+                    )}
+                  </div>
+
+                  {pickerOpen && (
+                    <SizePicker
+                      presets={presetGroups}
+                      selected={group.sizes.map((row) => row.size)}
+                      onToggle={(size) => toggleSize(group, size)}
+                      fieldClassName={fieldClassName}
+                    />
+                  )}
+
+                  {/* Precio y stock por talla */}
+                  {group.sizes.length > 0 ? (
+                    <div className="overflow-x-auto rounded-lg border">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
+                          <tr>
+                            <th className="px-3 py-2 font-medium">Talla</th>
+                            <th className="px-3 py-2 font-medium">Precio (COP)</th>
+                            <th className="px-3 py-2 font-medium">Stock</th>
+                            <th className="w-10 px-2 py-2">
+                              <span className="sr-only">Quitar</span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.sizes.map((row) => (
+                            <tr key={row.size} className="border-t">
+                              <td className="px-3 py-2">
+                                <span className="inline-flex min-w-10 justify-center rounded-md bg-muted px-2 py-1 font-semibold">
+                                  {row.size}
+                                </span>
+                              </td>
+                              <td className="px-3 py-1.5">
+                                <div className="flex items-center gap-2">
+                                  <PriceInput
+                                    value={row.price}
+                                    onChange={(price) => updateSize(group, row.size, { price })}
+                                    placeholder={basePrice ? formatAmount(basePrice) : "Precio del producto"}
+                                    className={cn("h-8 w-32", fieldClassName)}
+                                    aria-label={`Precio talla ${row.size}`}
+                                  />
+                                  {row.price === undefined ? (
+                                    <span className="whitespace-nowrap text-xs text-muted-foreground">Precio base</span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => updateSize(group, row.size, { price: undefined })}
+                                      className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-brand-link hover:underline"
+                                    >
+                                      <RotateCcw className="h-3 w-3" /> Usar precio base
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-3 py-1.5">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={row.stock}
+                                  onFocus={(event) => event.target.select()}
+                                  onChange={(event) =>
+                                    updateSize(group, row.size, {
+                                      stock: Math.max(0, Math.floor(Number(event.target.value) || 0)),
+                                    })
+                                  }
+                                  className={cn("h-8 w-20", fieldClassName)}
+                                  aria-label={`Stock talla ${row.size}`}
+                                />
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSize(group, row.size)}
+                                  className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <X className="h-4 w-4" />
+                                  <span className="sr-only">Quitar talla {row.size}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    !pickerOpen && (
+                      <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
+                        Aún no hay tallas. Toca &quot;Elegir tallas&quot;.
+                      </p>
+                    )
+                  )}
+
+                  {group.sizes.length > 1 && (
+                    <BulkStock
+                      onApply={(stock) =>
+                        updateGroup(group.uid, { sizes: group.sizes.map((row) => ({ ...row, stock })) })
+                      }
+                    />
                   )}
                 </div>
-
-                {pickerOpen && (
-                  <SizePicker
-                    presets={presets}
-                    selected={group.sizes.map((row) => row.size)}
-                    onToggle={(size) => toggleSize(group, size)}
-                    fieldClassName={fieldClassName}
-                  />
-                )}
-
-                {/* Precio y stock por talla */}
-                {group.sizes.length > 0 ? (
-                  <div className="overflow-x-auto rounded-lg border">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Talla</th>
-                          <th className="px-3 py-2 font-medium">Precio (COP)</th>
-                          <th className="px-3 py-2 font-medium">Stock</th>
-                          <th className="w-10 px-2 py-2">
-                            <span className="sr-only">Quitar</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {group.sizes.map((row) => (
-                          <tr key={row.size} className="border-t">
-                            <td className="px-3 py-2">
-                              <span className="inline-flex min-w-10 justify-center rounded-md bg-muted px-2 py-1 font-semibold">
-                                {row.size}
-                              </span>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <div className="flex items-center gap-2">
-                                <PriceInput
-                                  value={row.price}
-                                  onChange={(price) => updateSize(group, row.size, { price })}
-                                  placeholder={basePrice ? formatAmount(basePrice) : "Precio del producto"}
-                                  className={cn("h-8 w-32", fieldClassName)}
-                                  aria-label={`Precio talla ${row.size}`}
-                                />
-                                {row.price === undefined ? (
-                                  <span className="whitespace-nowrap text-xs text-muted-foreground">Precio base</span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => updateSize(group, row.size, { price: undefined })}
-                                    className="flex items-center gap-1 whitespace-nowrap text-xs font-medium text-brand-link hover:underline"
-                                  >
-                                    <RotateCcw className="h-3 w-3" /> Usar precio base
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <Input
-                                type="number"
-                                min={0}
-                                value={row.stock}
-                                onFocus={(event) => event.target.select()}
-                                onChange={(event) =>
-                                  updateSize(group, row.size, {
-                                    stock: Math.max(0, Math.floor(Number(event.target.value) || 0)),
-                                  })
-                                }
-                                className={cn("h-8 w-20", fieldClassName)}
-                                aria-label={`Stock talla ${row.size}`}
-                              />
-                            </td>
-                            <td className="px-2 py-1.5">
-                              <button
-                                type="button"
-                                onClick={() => toggleSize(group, row.size)}
-                                className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <X className="h-4 w-4" />
-                                <span className="sr-only">Quitar talla {row.size}</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  !pickerOpen && (
-                    <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
-                      Aún no hay tallas. Toca &quot;Elegir tallas&quot;.
-                    </p>
-                  )
-                )}
-
-                {group.sizes.length > 1 && (
-                  <BulkStock
-                    onApply={(stock) =>
-                      updateGroup(group.uid, { sizes: group.sizes.map((row) => ({ ...row, stock })) })
-                    }
-                  />
-                )}
-              </div>
+              )}
             </div>
           )
         })}
@@ -455,13 +572,15 @@ function SizePicker({
   onToggle,
   fieldClassName,
 }: {
-  presets: string[]
+  presets: SizePresetGroup[]
   selected: string[]
   onToggle: (size: string) => void
   fieldClassName?: string
 }) {
   const [custom, setCustom] = useState("")
-  const extra = selected.filter((size) => !presets.includes(size))
+  const allPresets = presets.flatMap((group) => group.sizes)
+  const extra = selected.filter((size) => !allPresets.includes(size))
+  const groupsToShow = extra.length ? [...presets, { label: "Otras tallas", sizes: extra }] : presets
 
   const addCustom = () => {
     const size = custom.trim().replace(",", ".")
@@ -471,27 +590,32 @@ function SizePicker({
 
   return (
     <div className="space-y-3 rounded-lg bg-muted/40 p-3">
-      <div className="flex flex-wrap gap-1.5">
-        {[...presets, ...extra].map((size) => {
-          const active = selected.includes(size)
-          return (
-            <button
-              key={size}
-              type="button"
-              onClick={() => onToggle(size)}
-              aria-pressed={active}
-              className={cn(
-                "min-w-11 rounded-md border px-2.5 py-1.5 text-sm font-medium transition-colors",
-                active
-                  ? "border-brand-blue bg-brand-blue text-white"
-                  : "border-neutral-300 bg-background hover:border-brand-blue/60 dark:border-input"
-              )}
-            >
-              {size}
-            </button>
-          )
-        })}
-      </div>
+      {groupsToShow.map((group) => (
+        <div key={group.label} className="space-y-1.5">
+          {groupsToShow.length > 1 && <p className="text-xs font-medium text-muted-foreground">{group.label}</p>}
+          <div className="flex flex-wrap gap-1.5">
+            {group.sizes.map((size) => {
+              const active = selected.includes(size)
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => onToggle(size)}
+                  aria-pressed={active}
+                  className={cn(
+                    "min-w-11 rounded-md border px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    active
+                      ? "border-brand-blue bg-brand-blue text-white"
+                      : "border-neutral-300 bg-background hover:border-brand-blue/60 dark:border-input"
+                  )}
+                >
+                  {size}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
       <div className="flex max-w-xs gap-2">
         <Input
           value={custom}

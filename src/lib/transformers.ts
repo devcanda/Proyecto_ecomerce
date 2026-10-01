@@ -71,10 +71,12 @@ export function transformProduct(product: ProductWithRelations): Product {
     isNew: product.isNew,
     isFeatured: product.isFeatured,
     rating: 4.5, // Default rating - could be calculated from reviews in the future
-    variantType: product.category.variantType,
+    // Tipo de talla del propio producto
+    variantType: product.sizeType,
     variants,
     sizeGuide: product.brand.sizeGuide || undefined,
     model: product.model?.name,
+    gender: product.gender ?? undefined,
   }
 }
 

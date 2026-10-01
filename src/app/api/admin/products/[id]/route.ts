@@ -34,6 +34,8 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
       categoryId: product.categoryId,
       brandId: product.brandId,
       modelId: product.modelId ?? undefined,
+      sizeType: product.sizeType,
+      gender: product.gender ?? undefined,
       variants: product.variants.map((variant) => ({
         id: variant.id,
         size: variant.size ?? "",

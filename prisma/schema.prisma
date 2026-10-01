@@ -35,7 +35,16 @@ enum OrderStatus {
 enum VariantType {
   NONE // sin tallas (tecnologia, articulos varios)
   FOOTWEAR // calzado: tallas COL (38, 38.5, ...)
-  CLOTHING // ropa: tallas XS, S, M, L, ...
+  CLOTHING // ropa (general): tallas XS, S, M, L, ...
+  CLOTHING_MEN // (antiguo) ropa de hombre: ahora es CLOTHING + genero MEN
+  CLOTHING_WOMEN // (antiguo) ropa de mujer: ahora es CLOTHING + genero WOMEN
+}
+
+// Para quien es el producto (null = no aplica, ej. tecnologia)
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
 }
 
 enum PaymentMethod {
@@ -134,6 +143,11 @@ model Product {
 
   brandId String
   brand   Brand  @relation(fields: [brandId], references: [id])
+
+  // Tipo de talla de las variantes del producto (NONE = sin talla o producto simple)
+  sizeType VariantType @default(NONE)
+  // Hombre, mujer o unisex (null = no aplica)
+  gender   Gender?
 
   modelId String?
   model   ProductModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)

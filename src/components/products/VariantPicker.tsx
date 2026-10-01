@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import type { ProductVariant, VariantType } from "@/types"
 import { cn } from "@/lib/utils"
-import { compareSizes } from "@/lib/category-type"
+import { compareSizes, sizeTypeLabel } from "@/lib/category-type"
 
 interface VariantPickerProps {
   variants: ProductVariant[]
@@ -101,7 +101,7 @@ export function VariantPicker({
         <div className="space-y-2.5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-wider">
-              Talla{variantType === "FOOTWEAR" && <span className="ml-1 font-normal normal-case text-muted-foreground">(COL)</span>}
+              Talla{sizeTypeLabel(variantType) && <span className="ml-1 font-normal normal-case text-muted-foreground">({sizeTypeLabel(variantType)})</span>}
             </p>
             {sizeGuide && (
               <Dialog>

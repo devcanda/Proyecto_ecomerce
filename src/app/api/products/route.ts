@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { slugify } from "@/lib/slug"
 import { productInclude, transformProduct } from "@/lib/transformers"
 import { requireAdmin } from "@/lib/admin-guard"
-import { parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
+import { parseGender, parseSizeType, parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
+import { isGender } from "@/lib/category-type"
 import { searchProducts } from "@/lib/search"
 
 export async function GET(request: NextRequest) {
@@ -21,6 +22,8 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get("limit")
     const offset = searchParams.get("offset")
     const search = searchParams.get("search")
+    // gender=MEN,WOMEN -> Hombre y/o Mujer (los productos unisex aparecen en ambos)
+    const genders = (searchParams.get("gender") ?? "").split(",").filter(isGender)
 
     // Build where clause
     const where: Record<string, unknown> = {
@@ -43,6 +46,12 @@ export async function GET(request: NextRequest) {
 
     if (featured === "true") {
       where.isFeatured = true
+    }
+
+    if (genders.length) {
+      const wanted = new Set(genders)
+      if (genders.includes("MEN") || genders.includes("WOMEN")) wanted.add("UNISEX")
+      where.gender = { in: [...wanted] }
     }
 
     if (isNew === "true") {
@@ -141,6 +150,8 @@ export async function POST(request: NextRequest) {
           categoryId: body.categoryId,
           brandId: body.brandId,
           modelId: body.modelId || null,
+          sizeType: parseSizeType(body.sizeType, variants),
+          gender: parseGender(body.gender),
         },
       })
       if (variants.length) await syncVariants(tx, created.id, variants)
