@@ -28,6 +28,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Fotos del color elegido en la tienda (vacio = fotos generales)
+  const [colorImages, setColorImages] = useState<string[]>([])
 
   useEffect(() => {
     async function fetchProduct() {
@@ -144,8 +146,22 @@ export default function ProductPage({ params }: ProductPageProps) {
 
         {/* Product Content */}
         <div className="grid gap-8 rounded-2xl border border-black/[0.06] bg-card p-4 shadow-[0_1px_3px_rgb(0_0_0/0.06),0_6px_16px_rgb(0_0_0/0.06)] sm:p-6 lg:grid-cols-[460px_1fr] lg:gap-12 lg:p-8 dark:border-border dark:shadow-none">
-          <ProductGallery images={product.images} productName={product.name} />
-          <ProductDetail product={product} />
+          {(() => {
+            // Antes de elegir color: fotos generales + portada de cada color
+            const covers = product.variants?.flatMap((variant) => variant.images?.slice(0, 1) ?? []) ?? []
+            const galleryImages = colorImages.length
+              ? colorImages
+              : [...new Set([...product.images, ...covers])]
+            return (
+              <ProductGallery
+                // Al cambiar de color la galeria vuelve a la primera foto (la portada)
+                key={galleryImages.join("|")}
+                images={galleryImages}
+                productName={product.name}
+              />
+            )
+          })()}
+          <ProductDetail product={product} onColorImagesChange={setColorImages} />
         </div>
 
         {/* Related Products */}

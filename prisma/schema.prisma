@@ -204,6 +204,8 @@ model ProductVariant {
   // Si es null se usa el precio del producto
   price     Decimal? @db.Decimal(10, 2)
   stock     Int      @default(0)
+  // Fotos del color: la primera es la portada, las demas otros angulos (iguales en todas sus tallas)
+  images    String[] @default([])
   position  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

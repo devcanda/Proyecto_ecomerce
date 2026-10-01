@@ -25,7 +25,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       {/* Image */}
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
         <Image
-          src={product.images[0]}
+          src={item.variant?.images?.[0] || product.images[0]}
           alt={product.name}
           fill
           className="object-cover"

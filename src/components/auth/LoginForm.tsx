@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
+  // Correo o nombre de usuario (por ejemplo "admin")
+  email: z.string().trim().min(1, "Ingresa tu correo o usuario"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 })
 
@@ -45,7 +46,7 @@ export function LoginForm() {
     })
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos")
+      setError("Correo/usuario o contraseña incorrectos")
       return
     }
 
@@ -71,13 +72,14 @@ export function LoginForm() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Correo o usuario</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
-                  type="email"
-                  placeholder="tu@email.com"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="tu@email.com o usuario"
                   className="pl-10"
                   {...register("email")}
                 />

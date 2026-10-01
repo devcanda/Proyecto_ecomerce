@@ -40,6 +40,7 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
         color: variant.color ?? "",
         price: variant.price !== null ? Number(variant.price) : undefined,
         stock: variant.stock,
+        images: variant.images,
       })),
     })
   } catch (error) {

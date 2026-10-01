@@ -6,7 +6,16 @@ export interface VariantInput {
   color?: string
   price?: number | null
   stock: number
+  // Fotos del color (la primera es la portada)
+  images: string[]
 }
+
+// Maximo de fotos por color
+export const MAX_COLOR_IMAGES = 8
+
+// Solo rutas propias (/uploads/...) o direcciones http(s)
+const isImageUrl = (value: unknown): value is string =>
+  typeof value === "string" && /^(\/uploads\/|https?:\/\/)/.test(value)
 
 // Limpia las variantes que llegan del formulario (descarta filas sin talla ni color)
 export function parseVariants(raw: unknown): VariantInput[] {
@@ -18,12 +27,17 @@ export function parseVariants(raw: unknown): VariantInput[] {
       const color = typeof value.color === "string" ? value.color.trim() : ""
       const price = typeof value.price === "number" && value.price > 0 ? value.price : null
       const stock = typeof value.stock === "number" && value.stock > 0 ? Math.floor(value.stock) : 0
+      // Solo rutas propias (/uploads/...) o direcciones http(s)
+      const images = Array.isArray(value.images)
+        ? [...new Set(value.images.filter(isImageUrl))].slice(0, MAX_COLOR_IMAGES)
+        : []
       return {
         id: typeof value.id === "string" && value.id ? value.id : undefined,
         size: size || undefined,
         color: color || undefined,
         price,
         stock,
+        images,
       }
     })
     .filter((variant) => variant.size || variant.color)
@@ -58,6 +72,7 @@ export async function syncVariants(
       color: variant.color ?? null,
       price: variant.price ?? null,
       stock: variant.stock,
+      images: variant.images,
       position,
     }
     if (variant.id && existingIds.has(variant.id)) {

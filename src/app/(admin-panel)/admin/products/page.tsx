@@ -313,7 +313,8 @@ export default function AdminProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/productos/${product.slug}`}>
+                              {/* Se abre en otra pestaña para no salir del panel */}
+                              <Link href={`/productos/${product.slug}`} target="_blank" rel="noopener noreferrer">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Ver
                               </Link>

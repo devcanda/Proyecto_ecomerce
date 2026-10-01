@@ -30,7 +30,7 @@ export function OrderSummary({ items }: OrderSummaryProps) {
           <div key={cartItemKey(item)} className="flex gap-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
-                src={item.product.images[0]}
+                src={item.variant?.images?.[0] || item.product.images[0]}
                 alt={item.product.name}
                 fill
                 className="object-cover"

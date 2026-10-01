@@ -14,6 +14,9 @@ type ProductWithRelations = PrismaProduct & {
   model?: PrismaProductModel | null
 }
 
+// Imagen generica para productos que aun no tienen fotos
+export const NO_PHOTO_IMAGE = "/producto-sin-foto.webp"
+
 // Relaciones que necesita transformProduct (para usar en los include de Prisma)
 export const productInclude = {
   category: true,
@@ -39,8 +42,18 @@ export function transformProduct(product: ProductWithRelations): Product {
         color: variant.color || undefined,
         price: variant.price !== null ? Number(variant.price) : price,
         stock: variant.stock,
+        images: variant.images.length ? variant.images : undefined,
       }))
     : undefined
+
+  // Sin fotos generales se usan las de los colores; sin ninguna, la imagen generica
+  // (la portada de cada color)
+  const colorImages = [...new Set(variants?.flatMap((variant) => variant.images?.slice(0, 1) ?? []) ?? [])]
+  const images = product.images.length
+    ? product.images
+    : colorImages.length
+      ? colorImages
+      : [NO_PHOTO_IMAGE]
 
   return {
     id: product.id,
@@ -50,7 +63,7 @@ export function transformProduct(product: ProductWithRelations): Product {
     category: product.category.slug,
     price,
     originalPrice: product.comparePrice ? Number(product.comparePrice) : undefined,
-    images: product.images,
+    images,
     description: product.description || "",
     specs: (product.specs as Record<string, string>) || {},
     // Con variantes, el stock total es la suma de todas las tallas/colores

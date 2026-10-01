@@ -14,9 +14,11 @@ import { VariantPicker } from "./VariantPicker"
 
 interface ProductDetailProps {
   product: Product
+  // Fotos del color elegido, para mostrarlas en la galeria
+  onColorImagesChange?: (images: string[]) => void
 }
 
-export function ProductDetail({ product }: ProductDetailProps) {
+export function ProductDetail({ product, onColorImagesChange }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
@@ -62,6 +64,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   const handleSelectColor = (color: string) => {
     setSelectedColor(color)
+    onColorImagesChange?.(variants.find((variant) => variant.color === color && variant.images?.length)?.images ?? [])
     setSelectionError(null)
     setQuantity(1)
     // Si la talla elegida no existe en ese color, se limpia

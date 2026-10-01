@@ -8,6 +8,8 @@ export interface ProductVariant {
   color?: string
   price: number
   stock: number
+  // Fotos del color de esta variante (la primera es la portada)
+  images?: string[]
 }
 
 export interface Product {

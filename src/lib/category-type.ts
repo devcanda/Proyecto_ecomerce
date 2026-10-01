@@ -21,3 +21,18 @@ export function guessVariantType(name: string): VariantType {
     return "CLOTHING"
   return "NONE"
 }
+
+// Orden natural de tallas: numericas de menor a mayor (38, 38.5, 39...), ropa en su orden (XS, S, M...)
+export function compareSizes(a: string, b: string) {
+  const na = Number(a.replace(",", "."))
+  const nb = Number(b.replace(",", "."))
+  const aNumeric = a.trim() !== "" && Number.isFinite(na)
+  const bNumeric = b.trim() !== "" && Number.isFinite(nb)
+  if (aNumeric && bNumeric) return na - nb
+  const ia = CLOTHING_SIZES.indexOf(a.toUpperCase())
+  const ib = CLOTHING_SIZES.indexOf(b.toUpperCase())
+  if (ia !== -1 && ib !== -1) return ia - ib
+  if (aNumeric !== bNumeric) return aNumeric ? -1 : 1
+  if ((ia !== -1) !== (ib !== -1)) return ia !== -1 ? -1 : 1
+  return a.localeCompare(b, "es", { numeric: true })
+}

@@ -79,7 +79,7 @@ export function CartPopover() {
                   >
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
                       <Image
-                        src={product.images?.[0] || PLACEHOLDER_IMAGE}
+                        src={item.variant?.images?.[0] || product.images?.[0] || PLACEHOLDER_IMAGE}
                         alt=""
                         fill
                         sizes="56px"

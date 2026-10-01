@@ -122,6 +122,8 @@ export function ProductForm({ product }: ProductFormProps) {
   )
   const [saveError, setSaveError] = useState<string | null>(null)
   const [variants, setVariants] = useState<VariantRow[]>(() => product?.variants ?? [])
+  // Aviso del editor de tallas/colores si falta completar algo
+  const [variantsProblem, setVariantsProblem] = useState<string | null>(null)
   const [typeSaving, setTypeSaving] = useState(false)
   const [models, setModels] = useState<ProductModel[]>([])
 
@@ -278,14 +280,11 @@ export function ProductForm({ product }: ProductFormProps) {
   const hasVariantFields = variantType !== "NONE"
   const variantStock = variants.reduce((total, row) => total + (row.stock || 0), 0)
   const basePrice = watch("price")
+  const hasColorPhotos = hasVariantFields && variants.some((row) => row.images?.length)
 
   const onSubmit = async (data: ProductFormData) => {
-    if (images.length === 0) {
-      alert("Debes subir al menos una imagen")
-      return
-    }
-    if (hasVariantFields && variants.length === 0) {
-      setSaveError('Elige al menos una talla en la seccion "Tallas y colores".')
+    if (hasVariantFields && (variantsProblem || variants.length === 0)) {
+      setSaveError(`Revisa la seccion "Tallas y colores": ${variantsProblem ?? "elige al menos una talla."}`)
       return
     }
 
@@ -560,15 +559,18 @@ export function ProductForm({ product }: ProductFormProps) {
               <CardTitle>Tallas y colores</CardTitle>
               <CardDescription>
                 {variantType === "FOOTWEAR"
-                  ? "Tallas de calzado disponibles, con su stock y precio si cambia"
-                  : "Tallas de ropa disponibles, con su stock y precio si cambia"}
+                  ? "Colores y tallas de calzado disponibles, con su precio y stock"
+                  : "Colores y tallas de ropa disponibles, con su precio y stock"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <VariantsEditor
                 variantType={variantType}
                 value={variants}
-                onChange={setVariants}
+                onChange={(rows, problem) => {
+                  setVariants(rows)
+                  setVariantsProblem(problem)
+                }}
                 basePrice={basePrice}
                 fieldClassName={FIELD_CLASS}
               />
@@ -593,7 +595,7 @@ export function ProductForm({ product }: ProductFormProps) {
           <CardHeader>
             <CardTitle>Imagenes</CardTitle>
             <CardDescription>
-              Sube las imagenes del producto (máximo 5)
+              Fotos generales del producto (máximo 5). Opcional si subiste fotos en los colores
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -602,6 +604,13 @@ export function ProductForm({ product }: ProductFormProps) {
               onChange={setImages}
               maxImages={5}
             />
+            {images.length === 0 && (
+              <p className="mt-3 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                {hasColorPhotos
+                  ? "No es obligatorio: la tienda usará las fotos de los colores."
+                  : "Puedes guardar sin fotos y subirlas después. Mientras tanto la tienda mostrará una imagen de \"Foto próximamente\"."}
+              </p>
+            )}
           </CardContent>
         </Card>
 

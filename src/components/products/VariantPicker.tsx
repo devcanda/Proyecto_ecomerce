@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import type { ProductVariant, VariantType } from "@/types"
 import { cn } from "@/lib/utils"
+import { compareSizes } from "@/lib/category-type"
 
 interface VariantPickerProps {
   variants: ProductVariant[]
@@ -37,7 +38,8 @@ export function VariantPicker({
   onSelectColor,
   error,
 }: VariantPickerProps) {
-  const sizes = unique(variants.map((variant) => variant.size))
+  // De menor a mayor, sin importar el orden en que se cargaron los colores
+  const sizes = unique(variants.map((variant) => variant.size)).sort(compareSizes)
   const colors = unique(variants.map((variant) => variant.color))
 
   // Una talla/color esta agotada si ninguna combinacion posible tiene stock
@@ -72,6 +74,7 @@ export function VariantPicker({
           <div className="flex flex-wrap gap-2">
             {colors.map((color) => {
               const available = colorAvailable(color)
+              const image = variants.find((variant) => variant.color === color && variant.images?.length)?.images?.[0]
               return (
                 <button
                   key={color}
@@ -79,8 +82,13 @@ export function VariantPicker({
                   onClick={() => onSelectColor(color)}
                   disabled={!available}
                   aria-pressed={selectedColor === color}
-                  className={optionClass(selectedColor === color, available)}
+                  className={cn(optionClass(selectedColor === color, available), image && "flex items-center gap-2 py-1.5 pl-1.5")}
                 >
+                  {image && (
+                    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded bg-muted">
+                      <Image src={image} alt="" fill sizes="32px" className="object-cover" />
+                    </span>
+                  )}
                   {color}
                 </button>
               )
