@@ -151,6 +151,7 @@ export async function POST(request: NextRequest) {
           brandId: body.brandId,
           modelId: body.modelId || null,
           sizeType: parseSizeType(body.sizeType, variants),
+          sku: typeof body.sku === "string" && body.sku.trim() ? body.sku.trim() : null,
           gender: parseGender(body.gender),
         },
       })

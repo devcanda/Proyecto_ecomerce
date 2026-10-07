@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, Loader2 } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, Loader2, FileSpreadsheet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -167,12 +167,20 @@ export default function AdminProductsPage() {
             Administra el catalogo de productos de tu tienda
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/products/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Producto
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/products/import">
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Carga masiva
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Producto
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

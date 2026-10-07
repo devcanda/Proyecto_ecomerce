@@ -36,6 +36,8 @@ const productSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   // Opcional: si se deja vacio se genera a partir del nombre al guardar
   slug: z.string().trim(),
+  // Referencia o codigo interno (opcional, unica)
+  sku: z.string().trim().max(60, "Máximo 60 caracteres"),
   description: z.string().min(1, "La descripcion es requerida"),
   price: z.number({ error: "El precio es requerido" }).positive("El precio debe ser mayor a 0"),
   // Opcional: si se deja vacio el producto no muestra precio tachado
@@ -56,6 +58,7 @@ export interface EditableProduct {
   id: string
   name: string
   slug: string
+  sku?: string
   description: string
   price: number
   comparePrice?: number
@@ -151,6 +154,7 @@ export function ProductForm({ product }: ProductFormProps) {
       ? {
           name: product.name,
           slug: product.slug,
+          sku: product.sku ?? "",
           description: product.description,
           price: product.price,
           comparePrice: product.comparePrice,
@@ -162,6 +166,7 @@ export function ProductForm({ product }: ProductFormProps) {
           isFeatured: product.isFeatured,
         }
       : {
+          sku: "",
           isNew: false,
           isFeatured: false,
           stock: 0,
@@ -337,7 +342,7 @@ export function ProductForm({ product }: ProductFormProps) {
     } catch (error) {
       console.error(error)
       setSaveError(
-        "No se pudo guardar el producto. Revisa que no exista otro producto con el mismo slug e intenta de nuevo."
+        "No se pudo guardar el producto. Revisa que no exista otro producto con el mismo slug o la misma referencia e intenta de nuevo."
       )
     } finally {
       setSaving(false)
@@ -466,6 +471,17 @@ export function ProductForm({ product }: ProductFormProps) {
                   <p className="text-sm text-destructive">{errors.slug.message}</p>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-2 sm:max-w-sm">
+              <Label htmlFor="sku">
+                Referencia <span className="font-normal text-muted-foreground">(opcional)</span>
+              </Label>
+              <Input id="sku" className={FIELD_CLASS} placeholder="Ej. NIK-SHOX-R4" {...register("sku")} />
+              <p className="text-xs text-muted-foreground">
+                Código interno del producto. Sirve para actualizarlo desde la carga masiva en Excel.
+              </p>
+              {errors.sku && <p className="text-sm text-destructive">{errors.sku.message}</p>}
             </div>
 
             <div className="space-y-2">

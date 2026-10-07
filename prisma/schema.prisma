@@ -126,6 +126,8 @@ model Product {
   id           String   @id @default(cuid())
   name         String
   slug         String   @unique
+  // Referencia o codigo interno (une las filas de un producto en la carga masiva)
+  sku          String?  @unique
   description  String?
   price        Decimal  @db.Decimal(10, 2)
   comparePrice Decimal? @db.Decimal(10, 2)

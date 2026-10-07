@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Imagenes subidas desde el panel (cuando no se usa Cloudinary)
 /storage/
+
+# Paquetes para subir al hosting
+/deploy/

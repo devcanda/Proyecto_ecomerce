@@ -24,6 +24,7 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
       id: product.id,
       name: product.name,
       slug: product.slug,
+      sku: product.sku ?? undefined,
       description: product.description ?? "",
       price: Number(product.price),
       comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,

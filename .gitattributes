@@ -1,0 +1,2 @@
+# Los scripts del servidor deben tener finales de linea de Linux
+*.sh text eol=lf

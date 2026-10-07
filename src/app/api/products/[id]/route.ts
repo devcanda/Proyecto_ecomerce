@@ -67,6 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
           // undefined = no cambia; null = quitar el modelo
           modelId: body.modelId === undefined ? undefined : body.modelId || null,
           sizeType: variants ? parseSizeType(body.sizeType, variants) : undefined,
+          sku: body.sku === undefined ? undefined : typeof body.sku === "string" && body.sku.trim() ? body.sku.trim() : null,
           gender: body.gender === undefined ? undefined : parseGender(body.gender),
         },
         include: productInclude,
