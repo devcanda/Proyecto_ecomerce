@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 import { buildTemplate } from "@/lib/product-import"
 
 // GET /api/admin/import/template -> plantilla de Excel para la carga masiva
 export async function GET() {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {

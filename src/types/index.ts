@@ -27,6 +27,8 @@ export interface Product {
   description: string
   specs: Record<string, string>
   stock: number
+  // STOCK (inventario propio), SUPPLIER (proveedor/dropshipping) o PREORDER (bajo pedido, en camino)
+  availability?: "STOCK" | "SUPPLIER" | "PREORDER"
   isNew: boolean
   isFeatured: boolean
   rating: number

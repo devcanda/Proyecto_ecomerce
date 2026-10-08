@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { normalizeEmail } from "@/lib/roles"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, password } = body
+    const { name, password } = body
+    const email = typeof body.email === "string" ? normalizeEmail(body.email) : ""
 
     if (!name || !email || !password) {
       return NextResponse.json(

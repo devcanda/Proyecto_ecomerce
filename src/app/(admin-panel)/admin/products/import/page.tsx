@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
@@ -11,6 +11,7 @@ import {
   Info,
   Loader2,
   RotateCcw,
+  Sparkles,
   Upload,
   XCircle,
 } from "lucide-react"
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Price } from "@/components/ui/price"
 import type { ImportItem, ImportPreview, ImportResult } from "@/lib/product-import"
+import { assignPhotoUrls, runLimited, uploadPhotoFromUrl } from "@/lib/photo-upload-client"
 import { cn } from "@/lib/utils"
 
 type Filter = "all" | "error" | "ok"
@@ -399,7 +401,15 @@ function ItemRow({ item }: { item: ImportItem }) {
         </span>
       </td>
       <td className="px-3 py-2 text-muted-foreground">{item.isVariable ? item.variantCount : "Simple"}</td>
-      <td className="px-3 py-2">{item.stock}</td>
+      <td className="px-3 py-2">
+        {item.availability === "SUPPLIER" ? (
+          <span className="text-green-700 dark:text-green-400">Proveedor</span>
+        ) : item.availability === "PREORDER" ? (
+          <span className="text-brand-link">Bajo pedido</span>
+        ) : (
+          item.stock
+        )}
+      </td>
       <td className="whitespace-nowrap px-3 py-2">{item.price ? <Price amount={item.price} /> : "—"}</td>
       <td className="px-3 py-2">
         <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium", status.className)}>
@@ -439,9 +449,21 @@ function ResultCard({ result, onReset }: { result: ImportResult; onReset: () => 
             </ul>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          Recuerda agregar las fotos desde <b>Editar</b> en cada producto.
-        </p>
+        {result.photoJobs.length > 0 && <PhotoJobs jobs={result.photoJobs} />}
+        {result.createdIds.length > 0 && (
+          <div className="mx-auto max-w-md space-y-2 text-sm text-muted-foreground">
+            <p>
+              Los productos que queden sin foto se pueden completar en <b>Fotos masivas</b>: por nombre de archivo, arrastrando
+              fotos o buscándolas con IA.
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/products/photos?tab=ia&ids=${result.createdIds.slice(0, 25).join(",")}`}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Buscar fotos con IA para los productos nuevos
+              </Link>
+            </Button>
+          </div>
+        )}
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild>
             <Link href="/admin/products">Ver productos</Link>
@@ -452,5 +474,68 @@ function ResultCard({ result, onReset }: { result: ImportResult; onReset: () => 
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+// Descarga las fotos de la columna Fotos despues de importar (una por una, con avance visible)
+function PhotoJobs({ jobs }: { jobs: ImportResult["photoJobs"] }) {
+  const total = jobs.reduce((sum, job) => sum + job.urls.length, 0)
+  const [done, setDone] = useState(0)
+  const [finished, setFinished] = useState(false)
+  const [errors, setErrors] = useState<string[]>([])
+  const started = useRef(false)
+
+  useEffect(() => {
+    if (started.current) return
+    started.current = true
+    ;(async () => {
+      for (const job of jobs) {
+        const results = await runLimited(job.urls, 2, async (url) => {
+          try {
+            return (await uploadPhotoFromUrl(url)).url
+          } finally {
+            setDone((current) => current + 1)
+          }
+        })
+        const urls = results.flatMap((item) => (item.status === "fulfilled" ? [item.value] : []))
+        const failed = results.flatMap((item, index) =>
+          item.status === "rejected" ? [`${job.sku}${job.color ? ` (${job.color})` : ""}: ${item.reason instanceof Error ? item.reason.message : "error"} - ${job.urls[index]}`] : []
+        )
+        if (urls.length) {
+          try {
+            // Las fotos del Excel reemplazan las anteriores de ese producto o color
+            await assignPhotoUrls({ productId: job.productId, color: job.color, urls, mode: "replace" })
+          } catch (error) {
+            failed.push(`${job.sku}: ${error instanceof Error ? error.message : "no se pudieron guardar las fotos"}`)
+          }
+        }
+        if (failed.length) setErrors((current) => [...current, ...failed])
+      }
+      setFinished(true)
+    })()
+  }, [jobs])
+
+  return (
+    <div className="mx-auto max-w-md space-y-2 text-left text-sm">
+      <p className="flex items-center gap-2 font-medium">
+        {finished ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+        {finished
+          ? `Fotos descargadas: ${total - errors.length} de ${total}`
+          : `Descargando fotos de los enlaces: ${done} de ${total}... (no cierres esta página)`}
+      </p>
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-full bg-brand-blue transition-all" style={{ width: `${total ? (done / total) * 100 : 100}%` }} />
+      </div>
+      {errors.length > 0 && (
+        <details className="text-xs text-amber-700 dark:text-amber-400">
+          <summary className="cursor-pointer">{errors.length} {errors.length === 1 ? "foto no se pudo descargar" : "fotos no se pudieron descargar"}</summary>
+          <ul className="mt-1 max-h-40 space-y-0.5 overflow-y-auto break-all">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   )
 }

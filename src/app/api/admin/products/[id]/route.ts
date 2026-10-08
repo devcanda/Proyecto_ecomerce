@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 
 type Params = Promise<{ id: string }>
 
 // GET /api/admin/products/:id -> datos del producto para el formulario de edicion
 export async function GET(_request: NextRequest, { params }: { params: Params }) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {
@@ -29,6 +29,8 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
       price: Number(product.price),
       comparePrice: product.comparePrice ? Number(product.comparePrice) : undefined,
       stock: product.stock,
+      availability: product.availability,
+      supplierName: product.supplierName ?? "",
       images: product.images,
       isNew: product.isNew,
       isFeatured: product.isFeatured,

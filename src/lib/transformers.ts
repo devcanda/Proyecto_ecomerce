@@ -1,4 +1,5 @@
 import type { Product, Category, Brand } from "@/types"
+import { sellsWithoutStock } from "@/lib/availability"
 import type {
   Product as PrismaProduct,
   Category as PrismaCategory,
@@ -13,6 +14,9 @@ type ProductWithRelations = PrismaProduct & {
   variants?: PrismaProductVariant[]
   model?: PrismaProductModel | null
 }
+
+// Unidades que se pueden pedir por linea de un producto sin stock propio (proveedor o bajo pedido)
+export const ON_DEMAND_MAX_QUANTITY = 10
 
 // Imagen generica para productos que aun no tienen fotos
 export const NO_PHOTO_IMAGE = "/producto-sin-foto.webp"
@@ -35,13 +39,15 @@ type BrandWithCount = PrismaBrand & {
 
 export function transformProduct(product: ProductWithRelations): Product {
   const price = Number(product.price)
+  // Proveedor/dropshipping o bajo pedido: todas las tallas/colores se pueden comprar sin stock registrado
+  const onDemand = sellsWithoutStock(product.availability)
   const variants = product.variants?.length
     ? product.variants.map((variant) => ({
         id: variant.id,
         size: variant.size || undefined,
         color: variant.color || undefined,
         price: variant.price !== null ? Number(variant.price) : price,
-        stock: variant.stock,
+        stock: onDemand ? ON_DEMAND_MAX_QUANTITY : variant.stock,
         images: variant.images.length ? variant.images : undefined,
       }))
     : undefined
@@ -67,7 +73,12 @@ export function transformProduct(product: ProductWithRelations): Product {
     description: product.description || "",
     specs: (product.specs as Record<string, string>) || {},
     // Con variantes, el stock total es la suma de todas las tallas/colores
-    stock: variants ? variants.reduce((total, variant) => total + variant.stock, 0) : product.stock,
+    stock: onDemand
+      ? ON_DEMAND_MAX_QUANTITY
+      : variants
+        ? variants.reduce((total, variant) => total + variant.stock, 0)
+        : product.stock,
+    availability: product.availability,
     isNew: product.isNew,
     isFeatured: product.isFeatured,
     rating: 4.5, // Default rating - could be calculated from reviews in the future

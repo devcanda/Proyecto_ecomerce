@@ -6,7 +6,7 @@
 // y no se tocan al subir una version nueva.
 
 import { execSync } from "node:child_process"
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 const root = process.cwd()
@@ -27,6 +27,9 @@ cpSync(join(root, ".next", "static"), join(app, ".next", "static"), { recursive:
 cpSync(join(root, "public"), join(app, "public"), { recursive: true })
 // Nunca subir claves locales ni fotos de prueba
 for (const name of [".env", ".env.local", "storage"]) rmSync(join(app, name), { recursive: true, force: true })
+// CloudLinux no permite una carpeta node_modules en la raiz de la aplicacion (usa un enlace a su entorno):
+// las librerias viajan como _modulos y actualizar.sh las copia a su lugar
+renameSync(join(app, "node_modules"), join(app, "_modulos"))
 
 step("3/6 Agregando el procesador de fotos para Linux (sharp)")
 const sharpVersion = JSON.parse(readFileSync(join(root, "node_modules", "sharp", "package.json"), "utf8")).version
@@ -34,8 +37,8 @@ const tmp = join(out, ".sharp-linux")
 mkdirSync(tmp, { recursive: true })
 writeFileSync(join(tmp, "package.json"), JSON.stringify({ name: "sharp-linux", private: true }))
 run(`npm install --no-audit --no-fund --os=linux --cpu=x64 --libc=glibc sharp@${sharpVersion}`, tmp)
-rmSync(join(app, "node_modules", "@img"), { recursive: true, force: true })
-cpSync(join(tmp, "node_modules", "@img"), join(app, "node_modules", "@img"), { recursive: true })
+rmSync(join(app, "_modulos", "@img"), { recursive: true, force: true })
+cpSync(join(tmp, "node_modules", "@img"), join(app, "_modulos", "@img"), { recursive: true })
 rmSync(tmp, { recursive: true, force: true })
 
 step("4/6 Agregando el instalador de la base de datos")
@@ -60,6 +63,8 @@ writeFileSync(
     2
   )
 )
+// Herramientas del instalador ya incluidas (JavaScript puro): el servidor no tiene que descargar nada
+run("npm install --no-audit --no-fund --omit=dev", setup)
 
 step("5/6 Comprimiendo")
 const now = new Date()

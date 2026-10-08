@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { Search, UserPlus, MoreHorizontal, Mail, Ban, Eye, Shield } from "lucide-react"
+import { Search, UserPlus, MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +32,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useAdminStore } from "@/stores/admin-store"
 import { Price } from "@/components/ui/price"
 
@@ -42,7 +53,9 @@ const statusConfig = {
 
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
+  editor: "Editor de productos",
   customer: "Cliente",
+  moderator: "Moderador",
 }
 
 function UsersSkeleton() {
@@ -93,6 +106,27 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [roleFilter, setRoleFilter] = useState("all")
+  const { data: session } = useSession()
+  const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    if (!deleteUser) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const response = await fetch(`/api/users/${deleteUser.id}`, { method: "DELETE" })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || "No se pudo eliminar el usuario")
+      setDeleteUser(null)
+      fetchUsers()
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "No se pudo eliminar el usuario")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     fetchUsers()
@@ -203,6 +237,7 @@ export default function AdminUsersPage() {
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="customer">Clientes</SelectItem>
+            <SelectItem value="editor">Editores</SelectItem>
             <SelectItem value="admin">Admins</SelectItem>
           </SelectContent>
         </Select>
@@ -252,7 +287,10 @@ export default function AdminUsersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                          <Badge
+                            variant={user.role === "admin" ? "default" : "outline"}
+                            className={user.role === "editor" ? "border-brand-blue/40 bg-brand-blue/10 text-brand-link" : ""}
+                          >
                             {roleLabels[user.role] || user.role}
                           </Badge>
                         </TableCell>
@@ -264,7 +302,7 @@ export default function AdminUsersPage() {
                         <TableCell>{user.orders}</TableCell>
                         <TableCell><Price amount={user.totalSpent} /></TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(user.createdAt).toLocaleDateString("es-PE")}
+                          {new Date(user.createdAt).toLocaleDateString("es-CO")}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -274,30 +312,26 @@ export default function AdminUsersPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver perfil
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/users/${user.id}/edit`}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Editar
+                                </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Mail className="mr-2 h-4 w-4" />
-                                Enviar email
-                              </DropdownMenuItem>
-                              {user.role !== "admin" && (
-                                <DropdownMenuItem>
-                                  <Shield className="mr-2 h-4 w-4" />
-                                  Hacer admin
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              {user.status !== "suspended" ? (
-                                <DropdownMenuItem className="text-destructive">
-                                  <Ban className="mr-2 h-4 w-4" />
-                                  Suspender
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem>
-                                  Reactivar cuenta
-                                </DropdownMenuItem>
+                              {user.id !== session?.user?.id && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => {
+                                      setDeleteError(null)
+                                      setDeleteUser({ id: user.id, name: user.name })
+                                    }}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Eliminar
+                                  </DropdownMenuItem>
+                                </>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -311,6 +345,32 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Seguro que quieres eliminar a <b>{deleteUser?.name}</b>? Esta acción no se puede deshacer. Si solo
+              quieres impedir que entre, mejor edítalo y cambia su estado a Inactivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault()
+                handleDelete()
+              }}
+              disabled={deleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

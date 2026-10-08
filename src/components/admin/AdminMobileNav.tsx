@@ -3,15 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Menu,
-  LayoutDashboard,
-  Package,
-  CreditCard,
-  Users,
-  Settings,
-  Store,
-} from "lucide-react"
+import { Menu, Store } from "lucide-react"
+import { useAdminNav } from "./admin-nav"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,17 +16,11 @@ import {
 } from "@/components/ui/sheet"
 import { Logo } from "@/components/layout/Logo"
 
-const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Productos", href: "/admin/products", icon: Package },
-  { name: "Pagos", href: "/admin/payments", icon: CreditCard },
-  { name: "Usuarios", href: "/admin/users", icon: Users },
-  { name: "Configuracion", href: "/admin/settings", icon: Settings },
-]
 
 export function AdminMobileNav() {
   const pathname = usePathname()
   const [open, setOpen] = React.useState(false)
+  const { items, badge } = useAdminNav()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -48,12 +35,12 @@ export function AdminMobileNav() {
           <SheetTitle className="flex items-center gap-3">
             <Logo className="h-9" />
             <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              Admin
+              {badge}
             </span>
           </SheetTitle>
         </SheetHeader>
         <nav className="flex-1 space-y-1 p-4">
-          {navigation.map((item) => {
+          {items.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link

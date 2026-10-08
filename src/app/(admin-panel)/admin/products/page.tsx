@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, Loader2, FileSpreadsheet } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, Loader2, FileSpreadsheet, Images } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +53,7 @@ interface Product {
   price: number
   originalPrice?: number
   stock: number
+  availability?: "STOCK" | "SUPPLIER" | "PREORDER"
   images: string[]
   isNew: boolean
   isFeatured: boolean
@@ -104,6 +106,9 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  // El editor de productos puede crear y editar, pero no eliminar
+  const { data: session } = useSession()
+  const canDelete = session?.user?.role === "ADMIN"
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
@@ -172,6 +177,12 @@ export default function AdminProductsPage() {
             <Link href="/admin/products/import">
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               Carga masiva
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/admin/products/photos">
+              <Images className="mr-2 h-4 w-4" />
+              Fotos masivas
             </Link>
           </Button>
           <Button asChild>
@@ -302,9 +313,17 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="capitalize">{product.category}</TableCell>
                       <TableCell><Price amount={product.price} /></TableCell>
-                      <TableCell>{product.stock}</TableCell>
+                      <TableCell>{product.availability && product.availability !== "STOCK" ? "—" : product.stock}</TableCell>
                       <TableCell>
-                        {product.stock > 0 ? (
+                        {product.availability === "SUPPLIER" ? (
+                          <Badge variant="outline" className="border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400">
+                            Proveedor
+                          </Badge>
+                        ) : product.availability === "PREORDER" ? (
+                          <Badge variant="outline" className="border-brand-blue/40 bg-brand-blue/10 text-brand-link">
+                            Bajo pedido
+                          </Badge>
+                        ) : product.stock > 0 ? (
                           <Badge variant="default" className="bg-green-600">
                             En stock
                           </Badge>
@@ -333,14 +352,18 @@ export default function AdminProductsPage() {
                                 Editar
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => setDeleteId(product.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </DropdownMenuItem>
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => setDeleteId(product.id)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

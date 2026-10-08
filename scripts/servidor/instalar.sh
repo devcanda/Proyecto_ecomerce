@@ -22,9 +22,17 @@ if [ "$NODE_MAJOR" -lt 20 ]; then
 fi
 echo "Node.js $(node -v)"
 
-# 2. Herramientas de instalacion
-echo; echo "--- Instalando herramientas (puede tardar 1-2 minutos) ---"
-npm install --no-audit --no-fund --omit=dev
+# 2. Librerias de la tienda (en CloudLinux node_modules es un enlace a la carpeta del entorno virtual)
+echo; echo "--- Librerias de la tienda ---"
+if [ -d "$APP_DIR/_modulos" ]; then
+  if [ -L "$APP_DIR/node_modules" ]; then
+    MODS="$(readlink -f "$APP_DIR/node_modules")"
+    mkdir -p "$MODS" && cp -a "$APP_DIR/_modulos/." "$MODS/" && rm -rf "$APP_DIR/_modulos"
+  elif [ ! -e "$APP_DIR/node_modules" ]; then
+    mv "$APP_DIR/_modulos" "$APP_DIR/node_modules"
+  fi
+fi
+echo "ok"
 
 # 3. Datos de la base de datos
 echo; echo "--- Base de datos PostgreSQL ---"

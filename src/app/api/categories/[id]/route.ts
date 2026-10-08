@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 import { transformCategory } from "@/lib/transformers"
 import { isVariantType } from "@/lib/category-type"
 
@@ -8,7 +8,7 @@ type Params = Promise<{ id: string }>
 
 // PATCH /api/categories/:id { variantType } -> cambia el tipo de tallas de la categoria
 export async function PATCH(request: NextRequest, { params }: { params: Params }) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {

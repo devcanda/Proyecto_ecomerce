@@ -22,6 +22,7 @@ import { SizeGuideField } from "@/components/admin/SizeGuideField"
 import type { Gender, VariantType } from "@/types"
 import { GENDERS, guessGender, normalizeSizeType } from "@/lib/category-type"
 import { cn } from "@/lib/utils"
+import { AVAILABILITY_OPTIONS, type Availability } from "@/lib/availability"
 
 // Bordes mas marcados en modo claro para distinguir bien los campos del formulario
 const FIELD_CLASS = "border-neutral-300 dark:border-input"
@@ -49,6 +50,9 @@ const productSchema = z.object({
   modelId: z.string().optional(),
   isNew: z.boolean(),
   isFeatured: z.boolean(),
+  availability: z.enum(["STOCK", "SUPPLIER", "PREORDER"]),
+  // Opcional: nombre del proveedor (solo lo ve el panel)
+  supplierName: z.string().trim().max(80, "Máximo 80 caracteres"),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -63,6 +67,8 @@ export interface EditableProduct {
   price: number
   comparePrice?: number
   stock: number
+  availability?: Availability
+  supplierName?: string
   images: string[]
   isNew: boolean
   isFeatured: boolean
@@ -164,11 +170,15 @@ export function ProductForm({ product }: ProductFormProps) {
           modelId: product.modelId,
           isNew: product.isNew,
           isFeatured: product.isFeatured,
+          availability: product.availability ?? "STOCK",
+          supplierName: product.supplierName ?? "",
         }
       : {
           sku: "",
           isNew: false,
           isFeatured: false,
+          availability: "STOCK",
+          supplierName: "",
           stock: 0,
         },
   })
@@ -683,6 +693,13 @@ export function ProductForm({ product }: ProductFormProps) {
                 {errors.stock && (
                   <p className="text-sm text-destructive">{errors.stock.message}</p>
                 )}
+                {watch("availability") !== "STOCK" && (
+                  <p className="text-xs text-muted-foreground">
+                    No hace falta llenarlo: este producto es de{" "}
+                    {watch("availability") === "SUPPLIER" ? "proveedor / dropshipping" : "bajo pedido"} y se vende sin stock
+                    propio (ver Disponibilidad).
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -747,6 +764,43 @@ export function ProductForm({ product }: ProductFormProps) {
                   : "Puedes guardar sin fotos y subirlas después. Mientras tanto la tienda mostrará una imagen de \"Foto próximamente\"."}
               </p>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Disponibilidad</CardTitle>
+            <CardDescription>¿De dónde sale este producto cuando alguien lo compra?</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Disponibilidad">
+              {AVAILABILITY_OPTIONS.map((option) => {
+                const active = watch("availability") === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setValue("availability", option.value, { shouldDirty: true })}
+                    className={cn(
+                      "rounded-lg border p-3 text-left transition-colors",
+                      active ? "border-brand-blue bg-brand-blue/10" : "border-neutral-300 hover:border-brand-blue/60 dark:border-input"
+                    )}
+                  >
+                    <span className={cn("block text-sm font-semibold", active && "text-brand-link")}>{option.label}</span>
+                    <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="space-y-2 sm:max-w-sm">
+              <Label htmlFor="supplierName">
+                Proveedor <span className="font-normal text-muted-foreground">(opcional, solo lo ve el panel)</span>
+              </Label>
+              <Input id="supplierName" className={FIELD_CLASS} placeholder="Ej. Distribuidora El Paso" {...register("supplierName")} />
+              {errors.supplierName && <p className="text-sm text-destructive">{errors.supplierName.message}</p>}
+            </div>
           </CardContent>
         </Card>
 

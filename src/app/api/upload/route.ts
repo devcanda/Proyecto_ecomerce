@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cloudinary } from "@/lib/cloudinary"
-import { requireAdmin } from "@/lib/admin-guard"
-import { IMAGE_MAX_STORED_PX } from "@/lib/image-quality"
-import {
-  deleteLocalImage,
-  isCloudinaryConfigured,
-  LOCAL_PREFIX,
-  saveLocalImage,
-} from "@/lib/local-storage"
+import { requireProductManager } from "@/lib/admin-guard"
+import { ImageError, storeImage } from "@/lib/image-store"
+import { deleteLocalImage, LOCAL_PREFIX } from "@/lib/local-storage"
 
 export async function POST(request: NextRequest) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {
@@ -42,43 +37,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Convertir a buffer
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // Sin cuenta de Cloudinary configurada, la imagen se guarda en el propio servidor
-    if (!isCloudinaryConfigured()) {
-      return NextResponse.json(await saveLocalImage(buffer))
-    }
-
-    // Subir a Cloudinary
-    const result = await new Promise<{ secure_url: string; public_id: string }>(
-      (resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            {
-              folder: "basictech/products",
-              resource_type: "image",
-              transformation: [
-                { width: IMAGE_MAX_STORED_PX, height: IMAGE_MAX_STORED_PX, crop: "limit" },
-                { quality: "auto" },
-                { fetch_format: "auto" },
-              ],
-            },
-            (error, result) => {
-              if (error) reject(error)
-              else resolve(result as { secure_url: string; public_id: string })
-            }
-          )
-          .end(buffer)
-      }
-    )
-
-    return NextResponse.json({
-      url: result.secure_url,
-      publicId: result.public_id,
-    })
+    // Se guarda en Cloudinary o en el propio servidor (optimizada a WebP)
+    return NextResponse.json(await storeImage(Buffer.from(await file.arrayBuffer())))
   } catch (error) {
+    if (error instanceof ImageError) return NextResponse.json({ error: error.message }, { status: 400 })
     console.error("Error uploading image:", error)
     return NextResponse.json(
       { error: "Error al subir la imagen" },
@@ -88,7 +50,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {

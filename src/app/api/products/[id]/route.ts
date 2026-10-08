@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { isAvailability } from "@/lib/availability"
 import { productInclude, transformProduct } from "@/lib/transformers"
 import { parseGender, parseSizeType, parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireAdmin, requireProductManager } from "@/lib/admin-guard"
 import { slugify } from "@/lib/slug"
 
 type Params = Promise<{ id: string }>
@@ -32,7 +33,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Params }) {
-  const denied = await requireAdmin()
+  // Administradores y editores de productos
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {
@@ -61,6 +63,13 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
           specs: body.specs,
           isNew: body.isNew,
           isFeatured: body.isFeatured,
+          availability: isAvailability(body.availability) ? body.availability : undefined,
+          supplierName:
+            body.supplierName === undefined
+              ? undefined
+              : typeof body.supplierName === "string" && body.supplierName.trim()
+                ? body.supplierName.trim().slice(0, 80)
+                : null,
           isActive: body.isActive,
           categoryId: body.categoryId,
           brandId: body.brandId,
@@ -82,6 +91,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+  // Eliminar productos: solo administradores
   const denied = await requireAdmin()
   if (denied) return denied
 

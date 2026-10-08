@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 import { slugify } from "@/lib/slug"
 import { guessVariantType, isVariantType } from "@/lib/category-type"
 import { transformCategory } from "@/lib/transformers"
@@ -27,7 +27,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {

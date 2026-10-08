@@ -160,13 +160,16 @@ export function Header() {
                           Configuración
                         </Link>
                       </DropdownMenuItem>
-                      {session.user?.role === "ADMIN" && (
+                      {(session.user?.role === "ADMIN" || session.user?.role === "EDITOR") && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
-                            <Link href="/admin" className="cursor-pointer">
+                            <Link
+                              href={session.user?.role === "EDITOR" ? "/admin/products" : "/admin"}
+                              className="cursor-pointer"
+                            >
                               <Settings className="mr-2 h-4 w-4" />
-                              Panel Admin
+                              {session.user?.role === "EDITOR" ? "Panel de productos" : "Panel Admin"}
                             </Link>
                           </DropdownMenuItem>
                         </>

@@ -166,7 +166,18 @@ export function ProductDetail({ product, onColorImagesChange }: ProductDetailPro
 
       {/* Stock */}
       <p className="text-sm">
-        {availableStock > 0 ? (
+        {product.availability === "SUPPLIER" ? (
+          // Proveedor o dropshipping: se muestra como disponible, sin cantidades
+          <span className="text-green-600 dark:text-green-400">
+            Disponible
+            {selectedVariant?.size && ` en talla ${selectedVariant.size}`}
+          </span>
+        ) : product.availability === "PREORDER" ? (
+          <span className="text-brand-link">
+            Disponible bajo pedido
+            {selectedVariant?.size && ` en talla ${selectedVariant.size}`}
+          </span>
+        ) : availableStock > 0 ? (
           <span className="text-green-600 dark:text-green-400">
             {availableStock} {availableStock === 1 ? "unidad disponible" : "unidades disponibles"}
             {selectedVariant?.size && ` en talla ${selectedVariant.size}`}

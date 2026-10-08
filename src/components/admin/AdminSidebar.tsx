@@ -2,30 +2,17 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  Package,
-  CreditCard,
-  Users,
-  Settings,
-  ChevronLeft,
-  Store,
-} from "lucide-react"
+import { Store } from "lucide-react"
+import { useAdminNav } from "./admin-nav"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/layout/Logo"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 
-const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Productos", href: "/admin/products", icon: Package },
-  { name: "Pagos", href: "/admin/payments", icon: CreditCard },
-  { name: "Usuarios", href: "/admin/users", icon: Users },
-  { name: "Configuracion", href: "/admin/settings", icon: Settings },
-]
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { items, badge } = useAdminNav()
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r bg-card">
@@ -33,13 +20,13 @@ export function AdminSidebar() {
       <div className="flex h-16 items-center gap-3 border-b px-6">
         <Logo className="h-9" />
         <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-          Admin
+          {badge}
         </span>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link

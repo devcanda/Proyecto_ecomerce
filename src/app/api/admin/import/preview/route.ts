@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 import { previewImport } from "@/lib/product-import"
 import { readUploadedImport } from "@/lib/import-request"
 
 // POST /api/admin/import/preview (archivo) -> revision fila por fila, sin guardar nada
 export async function POST(request: NextRequest) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   const parsed = await readUploadedImport(request)

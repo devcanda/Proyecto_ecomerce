@@ -15,7 +15,11 @@ const guestRoutes = ["/login", "/register"]
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
-  const isAdmin = req.auth?.user?.role === "ADMIN"
+  const role = req.auth?.user?.role
+  const isAdmin = role === "ADMIN"
+  // El editor de productos solo puede entrar a la seccion de productos del panel
+  const isEditor = role === "EDITOR"
+  const isProductsSection = nextUrl.pathname.startsWith("/admin/products")
 
   // Check if the current path matches any protected route
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -40,7 +44,10 @@ export default auth((req) => {
   }
 
   // Redirect to home if accessing admin route without admin role
-  if (isAdminRoute && !isAdmin) {
+  if (isAdminRoute && isEditor && !isProductsSection) {
+    return NextResponse.redirect(new URL("/admin/products", nextUrl))
+  }
+  if (isAdminRoute && !isAdmin && !isEditor) {
     return NextResponse.redirect(new URL("/", nextUrl))
   }
 

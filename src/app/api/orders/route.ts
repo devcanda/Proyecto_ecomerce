@@ -60,6 +60,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
 
@@ -76,7 +81,8 @@ export async function POST(request: NextRequest) {
         total: body.total,
         paymentMethod: body.paymentMethod,
         notes: body.notes,
-        userId: body.userId,
+        // Siempre a nombre del usuario con sesion (no se acepta otro userId)
+        userId: session.user.id,
         addressId: body.addressId,
         items: {
           create: body.items.map((item: { productId: string; name: string; price: number; quantity: number }) => ({

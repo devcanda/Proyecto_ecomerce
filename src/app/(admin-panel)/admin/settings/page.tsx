@@ -1,6 +1,7 @@
 "use client"
 
-import { Save } from "lucide-react"
+import { use } from "react"
+import { Save, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,8 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { AiSettingsForm } from "@/components/admin/settings/AiSettingsForm"
 
-export default function AdminSettingsPage() {
+const TABS = ["general", "store", "notifications", "payments", "ia"]
+
+export default function AdminSettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  // ?tab=ia abre directamente la pestaña de inteligencia artificial
+  const { tab } = use(searchParams)
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -27,12 +33,16 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList>
+      <Tabs defaultValue={tab && TABS.includes(tab) ? tab : "general"} className="space-y-6">
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="store">Tienda</TabsTrigger>
           <TabsTrigger value="notifications">Notificaciones</TabsTrigger>
           <TabsTrigger value="payments">Pagos</TabsTrigger>
+          <TabsTrigger value="ia">
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            Inteligencia artificial
+          </TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
@@ -283,6 +293,11 @@ export default function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Inteligencia artificial */}
+        <TabsContent value="ia">
+          <AiSettingsForm />
         </TabsContent>
       </Tabs>
 

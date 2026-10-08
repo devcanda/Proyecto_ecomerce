@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { isAvailability } from "@/lib/availability"
 import { slugify } from "@/lib/slug"
 import { productInclude, transformProduct } from "@/lib/transformers"
-import { requireAdmin } from "@/lib/admin-guard"
+import { requireProductManager } from "@/lib/admin-guard"
 import { parseGender, parseSizeType, parseVariants, syncVariants, totalVariantStock } from "@/lib/variants"
 import { isGender } from "@/lib/category-type"
 import { searchProducts } from "@/lib/search"
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await requireAdmin()
+  const denied = await requireProductManager()
   if (denied) return denied
 
   try {
@@ -147,6 +148,8 @@ export async function POST(request: NextRequest) {
           specs: body.specs || {},
           isNew: body.isNew || false,
           isFeatured: body.isFeatured || false,
+          availability: isAvailability(body.availability) ? body.availability : "STOCK",
+          supplierName: typeof body.supplierName === "string" && body.supplierName.trim() ? body.supplierName.trim().slice(0, 80) : null,
           categoryId: body.categoryId,
           brandId: body.brandId,
           modelId: body.modelId || null,

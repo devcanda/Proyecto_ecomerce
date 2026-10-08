@@ -136,7 +136,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Stock */}
         <p className="mt-1 text-xs text-muted-foreground">
-          {product.stock > 0 ? (
+          {product.availability === "SUPPLIER" ? (
+            <span className="text-green-600 dark:text-green-400">Disponible</span>
+          ) : product.availability === "PREORDER" ? (
+            <span className="text-brand-link">Bajo pedido</span>
+          ) : product.stock > 0 ? (
             <span className="text-green-600 dark:text-green-400">
               {product.stock} disponibles
             </span>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/lib/admin-guard"
 
 type Params = Promise<{ id: string }>
 
@@ -7,6 +9,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+  }
+
   try {
     const { id } = await params
 
@@ -32,6 +39,11 @@ export async function GET(
         { error: "Order not found" },
         { status: 404 }
       )
+    }
+
+    // Solo el dueño del pedido o un administrador pueden verlo
+    if (order.userId !== session.user.id && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 })
     }
 
     return NextResponse.json({
@@ -80,6 +92,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Params }
 ) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const { id } = await params
     const body = await request.json()
