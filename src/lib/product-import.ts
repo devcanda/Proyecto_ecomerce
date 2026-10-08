@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs"
+import JSZip from "jszip"
 import { prisma } from "@/lib/prisma"
 import { slugify } from "@/lib/slug"
 import { CLOTHING_SIZES, compareSizes, guessVariantType } from "@/lib/category-type"
@@ -306,9 +307,39 @@ const cellText = (cell: ExcelJS.Cell): string => {
   return (cell.text ?? "").trim()
 }
 
+// Quita las notas/comentarios de celda del archivo antes de leerlo. Algunos programas (Python, IA, Google Sheets)
+// los guardan de una forma que ExcelJS no entiende, y para importar no se necesitan.
+async function withoutCellComments(buffer: Buffer): Promise<Buffer> {
+  const zip = await JSZip.loadAsync(buffer)
+  const isCommentPart = (path: string) =>
+    /^xl\/(comments[^/]*\.xml|comments\/.*|threadedComments\/.*|persons\/.*|drawings\/[^/]*\.vml)$/i.test(path)
+  const removed = Object.keys(zip.files).filter(isCommentPart)
+  if (!removed.length) return buffer
+  removed.forEach((path) => zip.remove(path))
+
+  const COMMENT_RELS = /<Relationship\b[^>]*Type="[^"]*\/(comments|vmlDrawing|threadedComment|person)"[^>]*\/>/gi
+  for (const path of Object.keys(zip.files)) {
+    const file = zip.file(path)
+    if (!file) continue
+    if (/^xl\/worksheets\/_rels\/.*\.rels$/i.test(path) || path === "xl/_rels/workbook.xml.rels") {
+      zip.file(path, (await file.async("string")).replace(COMMENT_RELS, ""))
+    } else if (/^xl\/worksheets\/[^/]+\.xml$/i.test(path)) {
+      zip.file(path, (await file.async("string")).replace(/<legacyDrawing\b[^>]*\/>/gi, ""))
+    }
+  }
+  const types = zip.file("[Content_Types].xml")
+  if (types) {
+    const xml = (await types.async("string")).replace(/<Override\b[^>]*PartName="\/?([^"]+)"[^>]*\/>/gi, (tag, part: string) =>
+      isCommentPart(part) ? "" : tag
+    )
+    zip.file("[Content_Types].xml", xml)
+  }
+  return zip.generateAsync({ type: "nodebuffer" })
+}
+
 async function readXlsx(buffer: Buffer): Promise<string[][]> {
   const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(buffer as unknown as ArrayBuffer)
+  await workbook.xlsx.load((await withoutCellComments(buffer)) as unknown as ArrayBuffer)
   const sheet = workbook.getWorksheet("Productos") ?? workbook.worksheets[0]
   if (!sheet) return []
   const rows: string[][] = []

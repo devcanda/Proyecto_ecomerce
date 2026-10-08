@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { AlertTriangle, Check, CheckCircle2, ExternalLink, Loader2, Save, Search, Settings, Sparkles } from "lucide-react"
+import { AlertTriangle, Check, CheckCircle2, ExternalLink, Loader2, Save, Search, Settings, Sparkles, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -16,7 +16,7 @@ import { assignPhotoUrls, runLimited, uploadPhotoFromUrl } from "@/lib/photo-upl
 import { cn } from "@/lib/utils"
 
 // Maximo de productos por tanda (cada color es una busqueda y una consulta a la IA)
-const MAX_BATCH = 25
+const MAX_BATCH = 150
 
 const ANGLE_LABELS: Record<string, string> = {
   lateral: "Lateral",
@@ -66,6 +66,9 @@ export function AiPhotoFinder({
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialIds.slice(0, MAX_BATCH)))
   const [runs, setRuns] = useState<Record<string, ProductRun>>({})
   const [running, setRunning] = useState(false)
+  const [progress, setProgress] = useState({ done: 0, total: 0 })
+  // Se revisa entre producto y producto para poder detener la busqueda
+  const stopRequested = useRef(false)
 
   useEffect(() => {
     fetch("/api/admin/ai/status")
@@ -83,21 +86,37 @@ export function AiPhotoFinder({
     })
   }, [targets, query, onlyMissing])
 
+  // Busquedas que usara un producto: una por cada color sin fotos (o una general si no tiene colores)
+  const colorsToSearch = (target: PhotoTarget) =>
+    hasPhotos(target) ? colorsWithoutPhotos(target).map((color) => color.name) : undefined
+  const searchesFor = (target: PhotoTarget) => {
+    const colors = colorsToSearch(target)
+    return colors?.length ? colors.length : Math.max(1, target.colors.length)
+  }
+  const estimatedSearches = [...selected].reduce((total, id) => {
+    const target = byId.get(id)
+    return total + (target ? searchesFor(target) : 0)
+  }, 0)
+
+  const allVisibleSelected = list.length > 0 && list.every((target) => selected.has(target.id))
+  const toggleAllVisible = () =>
+    setSelected((current) => {
+      const next = new Set(current)
+      if (allVisibleSelected) list.forEach((target) => next.delete(target.id))
+      else {
+        for (const target of list) {
+          if (next.size >= MAX_BATCH) break
+          next.add(target.id)
+        }
+      }
+      return next
+    })
+
   const toggle = (id: string) =>
     setSelected((current) => {
       const next = new Set(current)
       if (next.has(id)) next.delete(id)
       else if (next.size < MAX_BATCH) next.add(id)
-      return next
-    })
-
-  const selectVisible = () =>
-    setSelected((current) => {
-      const next = new Set(current)
-      for (const target of list) {
-        if (next.size >= MAX_BATCH) break
-        next.add(target.id)
-      }
       return next
     })
 
@@ -107,13 +126,20 @@ export function AiPhotoFinder({
   // Busca producto por producto (uno a la vez para no saturar la IA ni el servidor)
   const search = async () => {
     const ids = [...selected]
+    stopRequested.current = false
     setRunning(true)
+    setProgress({ done: 0, total: ids.length })
     setRuns(Object.fromEntries(ids.map((id) => [id, { state: "waiting", groups: [], picks: {} } as ProductRun])))
-    for (const id of ids) {
+    for (const [index, id] of ids.entries()) {
+      if (stopRequested.current) {
+        // Los que no alcanzaron a buscarse salen de la lista de resultados
+        setRuns((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !ids.slice(index).includes(key))))
+        break
+      }
       patchRun(id, { state: "searching" })
       const target = byId.get(id)
       // Solo se buscan los colores que aun no tienen fotos (si el producto ya tiene algunas)
-      const colors = target && hasPhotos(target) ? colorsWithoutPhotos(target).map((color) => color.name) : undefined
+      const colors = target ? colorsToSearch(target) : undefined
       try {
         const response = await fetch("/api/admin/ai/find-photos", {
           method: "POST",
@@ -131,6 +157,7 @@ export function AiPhotoFinder({
       } catch (error) {
         patchRun(id, { state: "error", error: error instanceof Error ? error.message : "No se pudieron buscar las fotos" })
       }
+      setProgress({ done: index + 1, total: ids.length })
     }
     setRunning(false)
   }
@@ -246,9 +273,6 @@ export function AiPhotoFinder({
                 <Checkbox checked={onlyMissing} onCheckedChange={(checked) => setOnlyMissing(Boolean(checked))} />
                 Solo productos o colores sin fotos
               </label>
-              <button type="button" onClick={selectVisible} className="text-brand-link hover:underline" disabled={running}>
-                Seleccionar los visibles
-              </button>
               {selected.size > 0 && (
                 <button type="button" onClick={() => setSelected(new Set())} className="text-muted-foreground hover:underline" disabled={running}>
                   Quitar selección
@@ -266,7 +290,13 @@ export function AiPhotoFinder({
             </div>
           </div>
 
-          <div className="max-h-72 divide-y overflow-y-auto rounded-lg border">
+          <div className="max-h-96 divide-y overflow-y-auto rounded-lg border">
+            {list.length > 0 && (
+              <label className="sticky top-0 z-10 flex cursor-pointer items-center gap-3 bg-muted px-3 py-2 text-sm font-medium">
+                <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAllVisible} disabled={running} />
+                {allVisibleSelected ? "Quitar todos" : `Seleccionar todos (${Math.min(list.length, MAX_BATCH)}${list.length > MAX_BATCH ? ` de ${list.length}` : ""})`}
+              </label>
+            )}
             {list.length === 0 ? (
               <p className="p-4 text-center text-sm text-muted-foreground">No hay productos que coincidan.</p>
             ) : (
@@ -320,12 +350,35 @@ export function AiPhotoFinder({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              {selected.size} de máximo {MAX_BATCH} productos seleccionados
+              {running ? (
+                <>
+                  Revisando producto <b className="text-foreground">{Math.min(progress.done + 1, progress.total)}</b> de {progress.total}...
+                </>
+              ) : (
+                <>
+                  {selected.size} de máximo {MAX_BATCH} productos seleccionados
+                  {selected.size > 0 && ` · usará unas ${estimatedSearches} búsquedas`}
+                </>
+              )}
             </p>
-            <Button type="button" onClick={search} disabled={running || selected.size === 0}>
-              {running ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              {running ? "Buscando..." : `Buscar fotos (${selected.size})`}
-            </Button>
+            <div className="flex gap-2">
+              {running && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    stopRequested.current = true
+                  }}
+                >
+                  <Square className="mr-2 h-4 w-4" />
+                  Detener
+                </Button>
+              )}
+              <Button type="button" onClick={search} disabled={running || selected.size === 0}>
+                {running ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                {running ? "Buscando..." : `Buscar fotos (${selected.size})`}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
