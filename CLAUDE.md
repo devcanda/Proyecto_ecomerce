@@ -57,3 +57,9 @@ See `/docs/PLAN.md` for detailed implementation phases and roadmap.
 - no uses server actions, usa Route handlers
 - para manejo de estado global usa Zustand
 - para formularios usar react-hook-form y zod
+
+## Memoria del Proyecto (MEMORY.md)
+
+- Al iniciar cualquier sesión o antes de planificar una tarea, lee SIEMPRE `@MEMORY.md` para conocer el contexto actual y decisiones recientes.
+- Al finalizar cualquier tarea, feature o corrección de bug, actualiza SIEMPRE `MEMORY.md` reflejando el nuevo estado y aprendizajes.
+- Mantén `MEMORY.md` por debajo de 60 líneas, resumiendo o limpiando lo que ya sea obsoleto.
