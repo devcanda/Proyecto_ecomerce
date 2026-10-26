@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { X } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,6 +26,8 @@ function ProductsContent() {
   const searchParams = useSearchParams()
   const { products, searchApproximate, loading, filters, setFilters, fetchProducts, fetchCategories, fetchBrands } = useProductsStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  // La barra del panel de filtros solo se muestra con el raton encima
+  const [filtersHover, setFiltersHover] = useState(false)
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -140,7 +143,15 @@ function ProductsContent() {
       <div className="flex gap-8">
         {/* Sidebar - Desktop */}
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-24">
+          {/* Alto de la pantalla con su propio scroll: los filtros se recorren sin bajar hasta el final de los productos */}
+          <div
+            onMouseEnter={() => setFiltersHover(true)}
+            onMouseLeave={() => setFiltersHover(false)}
+            className={cn(
+              "sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain pb-4 pr-2",
+              filtersHover ? "scrollbar-brand" : "scrollbar-brand-hidden"
+            )}
+          >
             <FilterSidebar filters={filters} onFiltersChange={handleFiltersChange} />
           </div>
         </aside>

@@ -1,4 +1,4 @@
-# MEMORY.md — Compra En Linea (actualizado 2026-10-15)
+# MEMORY.md — Compra En Linea (actualizado 2026-10-20)
 
 ## Estado Actual
 - Tienda real "Compra En Linea" (Colombia, COP) en https://compraenlinea.store (cPanel/CloudLinux, Node 22, PostgreSQL 13). Ya NO es mock: Prisma 7 + PostgreSQL (local: Docker `basictech-db`, puerto 5490).
@@ -16,12 +16,13 @@
 - Emails en minúscula (`normalizeEmail`); contraseñas bcrypt. Panel solo con route handlers + `requireAdmin`/`requireProductManager`.
 - Deploy: `npm run empaquetar` → subir tar.gz → `bash ~/tienda-nueva/instalacion/actualizar.sh` → RESTART. Migraciones con `migrar.mjs` (prisma migrate se cuelga en el hosting). No poner `node_modules` real en `~/tienda`.
 - Tras cambiar `schema.prisma`, reiniciar `npm run dev` (el cliente Prisma queda en memoria).
+- Barras de scroll: utilidad `scrollbar-brand` (globals.css; delgada, azul, sin flechas). Para mostrarla solo al pasar el ratón, alternar con `scrollbar-brand-hidden` vía estado React (onMouseEnter/Leave): Chrome no repinta `::-webkit-scrollbar` con `:hover`. Ej.: panel de filtros de `/productos`.
 
 ## Pendientes / Bugs Detectados
-- Sin publicar en producción: todo desde el 2026-10-07 (usuarios/seguridad, disponibilidad, fotos masivas, IA). 4 migraciones pendientes allá.
+- Producción tiene la versión del 2026-10-07 (usuarios/seguridad, verificado 2026-10-20). Falta publicar: tallas por rango, disponibilidad, fotos masivas, IA, columna Fotos/Proveedor (3 migraciones: product_on_demand, app_settings, product_availability).
 - Perfil: botón "Editar" de `/profile` sin acción (TestSprite TC011, sigue vigente).
 - TestSprite (2026-01-03, desactualizado) por re-verificar: agregar varios productos al carrito (TC008/TC009) y prop `sizes` en `<Image fill>`.
-- Filtros de marca/categoría de la tienda aún usan datos mock; `/about` y `/contact` dan 404; footer dice "envío a todo Perú".
+- Filtros de la tienda: marca/categoría usan datos mock y Precio tiene máximo fijo 10.000 COP (panel de filtros PC ya tiene scroll propio, 2026-10-20); `/about` y `/contact` dan 404; footer dice "envío a todo Perú".
 - Pasarela de pago colombiana pendiente (Stripe no sirve en Colombia). Pestañas General/Tienda/Notificaciones/Pagos de Configuración son maqueta.
 - Lint previo: `Header` setMounted, comillas en `admin/settings/page.tsx`, imports sin uso en `AdminHeader`.
 - Antes del lanzamiento: cambiar contraseñas admin; limpiar `~/restos_wordpress`, BD wp874 y dominios demo en cPanel.

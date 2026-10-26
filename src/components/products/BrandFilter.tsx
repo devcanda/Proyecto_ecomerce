@@ -55,7 +55,7 @@ export function BrandFilter({ selectedBrands, onBrandsChange }: BrandFilterProps
             />
           </div>
 
-          <div className="max-h-48 space-y-2 overflow-y-auto pr-3">
+          <div className="max-h-48 space-y-2 overflow-y-auto pr-3 scrollbar-brand">
             {filteredBrands.map((brand) => (
               <div key={brand.id} className="flex items-center space-x-2">
                 <Checkbox

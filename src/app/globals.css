@@ -158,3 +158,53 @@
     letter-spacing: -0.025em;
   }
 }
+
+/* Barra de desplazamiento delgada en azul corporativo (panel de filtros) */
+@utility scrollbar-brand {
+  /* Firefox (Chrome y Edge usan las reglas ::-webkit-scrollbar, sin flechas) */
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--brand-blue) 55%, transparent) transparent;
+
+    &:hover {
+      scrollbar-color: var(--brand-blue) transparent;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-button {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--brand-blue) 55%, transparent);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-blue);
+  }
+}
+
+/* Barra oculta (reserva su espacio). En el panel de filtros se cambia por scrollbar-brand al pasar el raton
+   desde el componente: Chrome no repinta la barra con :hover, pero si al cambiar la clase */
+@utility scrollbar-brand-hidden {
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-button {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}
